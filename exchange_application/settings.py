@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,10 +76,16 @@ WSGI_APPLICATION = 'exchange_application.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'AUS_Database',
+        'USER': 'postgres',
+        'PASSWORD': 'AUSCSE2024',
+        'HOST': 'ausdatabase.ctqkccm0kfep.eu-north-1.rds.amazonaws.com',
+        'PORT': '5432'
+        
     }
 }
+
 
 
 # Password validation
@@ -121,3 +128,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#S3 Bucket
+AWS_ACCESS_KEY_ID = 'AKIAXFMSPOML25N5XIWO'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'ausdatabucket'
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_REGION_NAME = 'eu-north-1'
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_ADDRESSING_STYLE = "virtual"
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+
