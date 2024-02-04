@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-v!c1^#!g7hd&$qxk0(ar8+^he7x4=9!y7v+qt6rqi$hq!j_ds5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG')
 
 ALLOWED_HOSTS = []
 
@@ -70,23 +70,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'exchange_application.wsgi.application'
 
+from dotenv import load_dotenv
 
+load_dotenv() 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'AUS_Database',
-        'USER': 'postgres',
-        'PASSWORD': 'AUSCSE2024',
-        'HOST': 'ausdatabase.ctqkccm0kfep.eu-north-1.rds.amazonaws.com',
-        'PORT': '5432'
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USERNAME'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT')
         
     }
 }
 
-
+print(os.getenv('DB_NAME'))
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -131,12 +132,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 #S3 Bucket
-AWS_ACCESS_KEY_ID = 'AKIAXFMSPOML25N5XIWO'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME = 'ausdatabucket'
+AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESSKEY')
+AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRETKEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('S3_BUCKETNAME')
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
-AWS_S3_REGION_NAME = 'eu-north-1'
+AWS_S3_REGION_NAME = os.getenv('S3_REGION')
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_ADDRESSING_STYLE = "virtual"
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
