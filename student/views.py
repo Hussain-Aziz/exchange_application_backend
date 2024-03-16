@@ -60,7 +60,7 @@ send_push_notification = SendPushNotification.as_view()
 '''
 
 class TestGet(viewsets.ModelViewSet):
-    serializer_class = TestSeralizer
+    #serializer_class = TestSeralizer
     pagination_class = CustomPagination
     #permission_classes = [permissions.IsAuthenticated]
     #authentication_classes = [TokenAuthentication]
@@ -68,4 +68,20 @@ class TestGet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Test.objects.all()
     
+
+from django.shortcuts import render
+from django.http import HttpResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from users.models import Student
+from users.serializers import StudentApplicationSerializer
+
+class StartApplicationAPI(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = StudentApplicationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

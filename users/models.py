@@ -43,7 +43,7 @@ class CourseApplication(models.Model):
     universityid = models.ForeignKey(University, on_delete=models.CASCADE)
     semester = models.CharField(max_length=15)
     facultyid = models.ForeignKey(Faculty, on_delete=models.CASCADE)
-    grade = models.CharField(max_length=2)
+    grade = models.CharField(max_length=3)
 
     def __str__(self):
         return f"{self.student} - {self.course}"
