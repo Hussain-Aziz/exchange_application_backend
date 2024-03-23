@@ -27,13 +27,13 @@ class Course(models.Model):
     
 class Student(models.Model):
     student_id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=40)
+    name = models.CharField(max_length=50)
     universityid = models.ForeignKey(University, on_delete=models.CASCADE)
     phone_num = models.IntegerField()
-    expected_graduation = models.CharField(max_length=15)
-    present_college = models.CharField(max_length=20) 
-    current_standing = models.CharField(max_length=20) 
-    major = models.CharField(max_length=20)   
+    expected_graduation = models.CharField(max_length=50)
+    present_college = models.CharField(max_length=50) 
+    current_standing = models.CharField(max_length=50) 
+    major = models.CharField(max_length=50)   
     def __str__(self):
         return f"{self.name} "
 

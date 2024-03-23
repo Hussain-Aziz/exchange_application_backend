@@ -11,27 +11,37 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from users.models import Student
-from users.serializers import StudentApplicationSerializer
-from rest_framework.decorators import api_view
-
-class StartApplicationAPI(APIView):
-    def post(self, request, *args, **kwargs):
-        print("request.data: ", request.data)
-        serializer = StudentApplicationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-@api_view(['POST'])
-def add_student(request):
-    if request.method == 'POST':
-        serializer = StudentApplicationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class StartApplicationAPI(APIView):
+    @csrf_exempt  # This decorator is to allow POST requests without CSRF token for testing
+    def add_student(request):
+        if request.method == 'POST':
+            # Load the data from the request body
+            data = json.loads(request.body)
+            
+            # Create a new Student instance
+            new_student = Student(
+                student_id=data['id'],
+                name=data['Name'],
+                present_college=data['Present College'],
+                present_major=data['Major'],
+                current_standing=data['Current Standing'],
+                mobile_number=data['Phone Number'],
+                expected_graduation=data['Expected Graduation']
+            )
+            
+            # Save the student instance to the database
+            new_student.save()
+            
+            # Return a success response
+            return JsonResponse({"message": "Student added successfully"}, status=201)
+        else:
+            return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+
+
+
