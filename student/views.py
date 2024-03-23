@@ -33,10 +33,8 @@ class StartApplicationAPI(APIView):
                 expected_graduation=data['Expected Graduation']
             )
             
-            # Save the student instance to the database
             new_student.save()
             
-            # Return a success response
             return JsonResponse({"message": "Student added successfully"}, status=201)
         else:
             return JsonResponse({"error": "Method not allowed"}, status=405)
