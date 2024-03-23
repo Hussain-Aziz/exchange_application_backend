@@ -27,14 +27,15 @@ class Course(models.Model):
     
 class Student(models.Model):
     student_id = models.IntegerField(primary_key=True)
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
+    name = models.CharField(max_length=40)
     universityid = models.ForeignKey(University, on_delete=models.CASCADE)
     phone_num = models.IntegerField()
     expected_graduation = models.CharField(max_length=15)
-
+    present_college = models.CharField(max_length=20) 
+    current_standing = models.CharField(max_length=20) 
+    major = models.CharField(max_length=20)   
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.name} "
 
 class CourseApplication(models.Model):
     course_application_id = models.AutoField(primary_key=True)
