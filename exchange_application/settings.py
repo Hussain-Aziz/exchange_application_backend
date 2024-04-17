@@ -58,7 +58,7 @@ REST_FRAMEWORK = {
 }
 
 REST_KNOX = {
-  'TOKEN_TTL': timedelta(hours=1),
+  'TOKEN_TTL': timedelta(hours=1, minutes=30),
   'USER_SERIALIZER': 'knox.serializers.UserSerializer',
   'TOKEN_LIMIT_PER_USER': None,
 }

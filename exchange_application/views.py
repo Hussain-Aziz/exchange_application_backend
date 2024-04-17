@@ -29,7 +29,7 @@ class LoginView(KnoxLoginView):
     def post(self, request, format=None):
         serializer = AuthTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
+        user = serializer.validated_data['user'] # type: ignore
         login(request, user)
 
         if Student.objects.filter(user=user).exists():
@@ -39,5 +39,5 @@ class LoginView(KnoxLoginView):
                           "faculty_type": Faculty.objects.get(user=user).faculty_type}
 
         response = super(LoginView, self).post(request, format=None)
-        response.data['user'].update(extra_data)
+        response.data['user'].update(extra_data) # type: ignore
         return response

@@ -5,6 +5,9 @@
 ### Prerequisites
 
 1. Download python 3.11.7 from <https://www.python.org/ftp/python/3.11.7/python-3.11.7-amd64.exe>
+2. Download tesseract for the comparison of pdfs
+    - windows: download from [here](https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-setup-3.05.00dev-205-ge205c59.exe) and set it up.
+    - linux: run `sudo apt-get install -y tesseract-ocr && sudo apt-get install -y poppler-utils`
 
 ### Initial setup
 
@@ -39,27 +42,14 @@ python manage.py loaddata exchange_application/seeds/faculty.json
 python manage.py runserver
 ```
 
-Create new data
+### Testing
 
-```python
-def seed():
-    from django.contrib.auth.models import User
-    from users.models import Faculty, Student
+```bash
+python manage.py test
+```
 
-    u1 = User(username="izualkernan@aus.edu")
-    u1.set_password("test")
-    u1.save()
-    u2 = User(username="dcjuan@aus.edu")
-    u2.set_password("test")
-    u2.save()
-    u3 = User(username="ddghaym@aus.edu")
-    u3.set_password("test")
-    u3.save()
-    u4 = User(username="b00088793@aus.edu")
-    u4.set_password("test")
-    u4.save()
-    Faculty(user=u1, department=12, faculty_type=2).save()
-    Faculty(user=u2, department=12, faculty_type=0).save()
-    Faculty(user=u3, department=12, faculty_type=1).save()
-    Student(user=u4).save()
+for coverage
+```bash
+coverage run --source='.' manage.py test
+coverage report
 ```
