@@ -8,6 +8,7 @@ class StudentApplicationSerializer(serializers.ModelSerializer):
 
 
 class CourseApplicationSerializer(serializers.ModelSerializer):
+    student = StudentApplicationSerializer()
     class Meta:
         model = CourseApplication
         fields = '__all__'

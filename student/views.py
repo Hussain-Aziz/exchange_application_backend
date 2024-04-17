@@ -1,7 +1,6 @@
 from rest_framework import viewsets
 
 from users.models import *
-from student.models import *
 from student.seralizers import *
 from users.pagination import CustomPagination
 
@@ -29,7 +28,7 @@ class StartApplicationAPI(APIView):
         
         student = Student.objects.filter(user=user).first()
         if student is None:
-            return JsonResponse({"message": "Student already exists"}, status=400)
+            return JsonResponse({"message": "Student doesn't exists"}, status=400)
         student.aus_id = data['id']
         student.name =  data['name']
         student.university = university
@@ -67,6 +66,11 @@ class AddCourseAPI(APIView):
         student = Student.objects.filter(user=user).first()
         if student is None:
             return JsonResponse({"message": "Student not found"}, status=404)
+        
+        aus_course = data['ausCourse']
+        course_subject = aus_course.split(" ")[0]
+
+        department = course_to_deparment[course_subject]
     
         # Create a new Course instance
         new_course = CourseApplication(
@@ -77,6 +81,7 @@ class AddCourseAPI(APIView):
             course_credits = int(data['courseCredits']),
             aus_course = data['ausCourse'],
             syllabus = data['hostUniversitySyllabus'],
+            department = department,
         )
         new_course.save()
         
@@ -90,4 +95,76 @@ class AddCourseAPI(APIView):
         return JsonResponse(serializer.data, safe=False)
 
 
-
+course_to_deparment = {
+    "ABRD": 0,
+    "ACC": 17,
+    "ANT": 6,
+    "ARA": 3,
+    "ARC": 1,
+    "ART": 2,
+    "ASE": 0,
+    "AUS": 0,
+    "BIO": 4,
+    "BIS": 20,
+    "BLW": 20,
+    "BME": 0,
+    "BPE": 0,
+    "BSE": 0,
+    "BUS": 20,
+    "CHE": 11,
+    "CHM": 4,
+    "CMP": 13,
+    "CMT": 0,
+    "COE": 13,
+    "CVE": 12,
+    "DES": 2,
+    "DLDG": 0,
+    "ECO": 18,
+    "EGM": 0,
+    "ELE": 14,
+    "ELP": 0,
+    "ELT": 5,
+    "ENG": 5,
+    "ENV": 4,
+    "ESM": 15,
+    "EWE": 0,
+    "FIN": 19,
+    "FLM": 2,
+    "FRN": 0,
+    "GEO": 6,
+    "GMPA": 0,
+    "HIS": 6,
+    "IDE": 1,
+    "IDS": 0,
+    "IEN": 0,
+    "INE": 15,
+    "INS": 15,
+    "ISA": 21,
+    "KOR": 0,
+    "MBA": 0,
+    "MCE": 16,
+    "MCM": 7,
+    "MGT": 20,
+    "MKT": 21,
+    "MSE": 0,
+    "MTH": 8,
+    "MTR": 0,
+    "MUM": 2,
+    "MUS": 7, # check
+    "NGN": 0,
+    "PHI": 6,
+    "PHY": 9,
+    "POL": 6,
+    "PSY": 10,
+    "QBA": 18,
+    "SCM": 21,
+    "SOC": 6,
+    "STA": 8,
+    "THE": 7, # check
+    "TRA": 3,
+    "UPA": 0,
+    "UPL": 1,
+    "VIS": 2,
+    "WRI": 5,
+    "WST": 0,
+}

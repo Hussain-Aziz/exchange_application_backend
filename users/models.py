@@ -14,27 +14,28 @@ FACULTY_CHOICES = (
 )
 
 DEPARTMENTS = (
-    (0, "Architecture"),
-    (1, "Art and Design"),
-    (2, "Arabic and Translation Studies"),
-    (3, "Biology, Chemistry and Environmental Sciences"),
-    (4, "English"),
-    (5, "International Studies"),
-    (6, "Media Communication"),
-    (7, "Mathematics and Statistics"),
-    (8, "Physics"),
-    (9, "Psychology"),
-    (10, "Chemical and Biological Engineering"),
-    (11, "Civil Engineering"),
-    (12, "Computer Science and Engineering"),
-    (13, "Electrical Engineering"),
-    (14, "Industrial Engineering"),
-    (15, "Mechanical Engineering"),
-    (16, "Accounting"),
-    (17, "Economics"),
-    (18, "Finance"),
-    (19, "Management, Strategy and Entrepreneurship"),
-    (20, "Marketing and Information Systems"),
+    (0, "Unknown"),
+    (1, "Architecture"),
+    (2, "Art and Design"),
+    (3, "Arabic and Translation Studies"),
+    (4, "Biology, Chemistry and Environmental Sciences"),
+    (5, "English"),
+    (6, "International Studies"),
+    (7, "Media Communication"),
+    (8, "Mathematics and Statistics"),
+    (9, "Physics"),
+    (10, "Psychology"),
+    (11, "Chemical and Biological Engineering"),
+    (12, "Civil Engineering"),
+    (13, "Computer Science and Engineering"),
+    (14, "Electrical Engineering"),
+    (15, "Industrial Engineering"),
+    (16, "Mechanical Engineering"),
+    (17, "Accounting"),
+    (18, "Economics"),
+    (19, "Finance"),
+    (20, "Management, Strategy and Entrepreneurship"),
+    (21, "Marketing and Information Systems"),
 )
 
 class Faculty(models.Model):
@@ -66,13 +67,17 @@ class CourseApplication(models.Model):
     course_application_id = models.AutoField(primary_key=True)
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     university = models.ForeignKey(University, on_delete=models.CASCADE)
-    course_code = models.CharField(max_length=50, blank=True)
-    course_title = models.CharField(max_length=50, blank=True)
+    course_code = models.CharField(max_length=50, blank=True, null=True)
+    course_title = models.CharField(max_length=50, blank=True, null=True)
     course_credits = models.IntegerField(default=0)
-    aus_course = models.CharField(max_length=50, blank=True)
-    syllabus = models.CharField(max_length=50, blank=True)
-    aus_syllabus = models.CharField(max_length=50, blank=True)
-    program_area = models.CharField(max_length=50, blank=True)
-    grade_required = models.CharField(max_length=50, blank=True)
-    pre_requisites_met = models.BooleanField(default=False)
-    approved_status = models.BooleanField(default=False)
+    aus_course = models.CharField(max_length=50, blank=True, null=True)
+    department = models.IntegerField(choices=DEPARTMENTS, default=0, null=True)
+    syllabus = models.CharField(max_length=50, blank=True, null=True)
+    aus_syllabus = models.CharField(max_length=50, blank=True, null=True)
+    program_area = models.CharField(max_length=50, blank=True, null=True)
+    grade_required = models.CharField(max_length=50, blank=True, null=True)
+    pre_requisites_met = models.BooleanField(null=True, blank=True)
+    approved_status = models.BooleanField(blank=False, null=True)
+
+    class Meta:
+        ordering = ['course_application_id']
