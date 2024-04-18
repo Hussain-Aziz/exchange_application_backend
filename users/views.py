@@ -1,8 +1,6 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+import re
+from django.http import JsonResponse
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 import os
 import platform
 from tempfile import TemporaryDirectory
@@ -12,25 +10,15 @@ import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image
 import requests
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 import json
-from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 import time
+from users.models import CourseApplication
 
 
 class Comparison(APIView):
-    def get(self, request, *args, **kwargs):
-        """
-        The GET request to compare two course syllabi and decide whether or not they are equivalent.
-
-        Accepts:
-            course_1 (str): The path or URL of the first course syllabus.
-            course_2 (str): The path or URL of the second course syllabus.
-        
-        Returns:
-            JSONResponse: The comparison of the two course syllabi in JSON format.
-        """
+    def get(self, request):
         try:
             # get the course syllabi from the query parameters
             pdf1 = request.query_params.get('course_1', None)
@@ -39,61 +27,32 @@ class Comparison(APIView):
             if not pdf1 or not pdf2:
                 return JsonResponse({"error": "Please provide the path or URL of the two course syllabi."}, status=400)
             
-            # read the text content from the PDF files in parallel
-            with ThreadPoolExecutor() as executor:
-                future1 = executor.submit(read_pdf, pdf1)
-                future2 = executor.submit(read_pdf, pdf2)
-
-                pdf1_text = future1.result()
-                pdf2_text = future2.result()
-
-            # compare the two course syllabi using OpenAI's GPT-3.5 model
-            client = OpenAI() # requires defining the OPENAI_API_KEY environment variable
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[ 
-                    # provide the instructions using system role
-                    {"role": "system", "content": 'Act like you are a college professor who needs to compare the learning outcomes of two course\
-                                                    syllabi and decide whether or not they are equivalent. To compare their similarity, you have to\
-                                                    write bullet points for each of the learning outcomes in course 1 and explain in only 1-2 sentences\
-                                                    whether or not they are achieved in course 2. The output must be in JSON format where the key is the\
-                                                    course learning objective from course 1 and the value is the explanation. At the end, add a key to the\
-                                                    json called "match percentage" and have its value be the percentage of learning outcomes from course 1\
-                                                    that matched. Remember the response must be a valid JSON object with no nested objects.'},
-                    # provide the course syllabi as the user input                                                
-                    {"role": "user", "content": f"Course 1: {pdf1_text}"},
-                    {"role": "user", "content": f"Course 2: {pdf2_text}"},
-                ]
-            )
-
-            # get the response from the model
-            primary_answer = response.choices[0].message.content
-
-            if primary_answer is None:
-                return JsonResponse({"error": "the model did not return a response"}, status=500)
-            
-            # extract the JSON response from the model's output
-            primary_answer = primary_answer[primary_answer.find("{"):primary_answer.rfind("}")+1]
-            primary_answer = json.loads(primary_answer)
+            # compare the two course syllabi
+            comparison_result = compare(pdf1, pdf2)
+            return JsonResponse(comparison_result, safe=False)
         
-            return JsonResponse(primary_answer, safe=False)
-        except:
-            return JsonResponse({"error": "An error occurred while processing the request."}, status=500)
+        except Exception as e:
+            return JsonResponse({"error": f"An error occurred while processing the request: {e}" }, status=500)
 
+class ComparisonOnApplication(APIView):
+    def get(self, request):
 
-def read_pdf(file):
-    """
-    Reads the text content from a PDF file.
+        id = request.query_params.get('id', None)
+        if not id:
+            return JsonResponse({"error": "Please provide the course application ID."}, status=400)
 
-    Args:
-        file (str): The path or URL of the PDF file.
+        course = CourseApplication.objects.filter(course_application_id=id).first()
 
-    Returns:
-        str: The extracted text content from the PDF file.
-    """
-    # requires tesseract to be installed
-    # windows: https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-setup-3.05.00dev-205-ge205c59.exe
-    # linux: sudo apt-get install -y tesseract-ocr && sudo apt-get install -y poppler-utils
+        if not course:
+            return JsonResponse({"error": "Course application not found."}, status=404)
+
+        success, result = do_comparison_on_application(course)
+        if success:
+            return JsonResponse(result, safe=False)
+        else:
+            return JsonResponse({"error": f"An error occurred while processing the request: {result}" }, status=500)
+
+def read_pdf(file, pdf_num):
     if platform.system() == "Windows":
         local = os.getenv('LOCALAPPDATA')
         tesseract_path = os.path.join(local, "Tesseract-OCR") # type: ignore
@@ -101,7 +60,9 @@ def read_pdf(file):
         pytesseract.pytesseract.tesseract_cmd = tesseract_exe
 
     if file.startswith("http"):
-        PDF_file = Path("temp.pdf")
+        PDF_file = Path(f"temp{pdf_num}.pdf")
+        if PDF_file.exists():
+            PDF_file.unlink()
         with open(PDF_file, "wb") as f:
             f.write(requests.get(file).content)
     else:
@@ -125,3 +86,95 @@ def read_pdf(file):
             pdf_text += text
         
     return pdf_text
+
+def pdf_read_with_retry(file, pdf_num):
+    for _ in range(3):
+        try:
+            return read_pdf(file, pdf_num)
+        except Exception as e:
+            print(f"Error reading PDF: {str(e)}")
+            time.sleep(2)
+    raise Exception(f"Failed to read the PDF file from {file}.")
+    
+def compare(pdf1, pdf2):
+    print(f"Starting comparison between {pdf1} and {pdf2}")
+    # read the text content from the PDF files in parallel
+    with ThreadPoolExecutor() as executor:
+        future1 = executor.submit(pdf_read_with_retry, pdf1, 1)
+        future2 = executor.submit(pdf_read_with_retry, pdf2, 2)
+
+        pdf1_text = future1.result()
+        pdf2_text = future2.result()
+
+    # compare the two course syllabi using OpenAI's GPT model
+    try:
+        client = OpenAI() # requires defining the OPENAI_API_KEY environment variable
+        response = client.chat.completions.create(
+            model="gpt-4-turbo-2024-04-09",
+                messages=[ 
+                    # provide the instructions using system role
+                    {"role": "system", "content": 'Act like you are a college professor who needs to compare the learning outcomes of two course\
+                                                    syllabi and decide whether or not they are equivalent. To compare their similarity, you have to\
+                                                    write bullet points for each of the learning outcomes in course 1 and explain in only 1-2 sentences\
+                                                    whether or not they are achieved in course 2. The output must be in JSON format where the key is the\
+                                                    course learning objective from course 1 and the value is the explanation. At the end, add a key to the\
+                                                    json called "match percentage" and have its value be the percentage of learning outcomes from course 1\
+                                                    that matched. Remember the response must be a valid JSON object with no nested objects.'},
+                    # provide the course syllabi as the user input                                                
+                    {"role": "user", "content": f"Course 1: {pdf1_text}"},
+                    {"role": "user", "content": f"Course 2: {pdf2_text}"},
+                ]
+            )
+    except OpenAIError as e:
+        raise Exception(f"OpenAI Error: {str(e)}")   
+
+    # get the response from the model
+    primary_answer = response.choices[0].message.content
+
+    if primary_answer is None:
+        raise Exception("The model did not return a response.")
+    
+    # extract the JSON response from the model's output
+    primary_answer = primary_answer[primary_answer.find("{"):primary_answer.rfind("}")+1]
+    primary_answer = json.loads(primary_answer)
+
+    return primary_answer
+
+def disallow_multiple_comparisons(course_application):
+    time_slept = 0
+    while course_application.running_comparison and time_slept < 300: # max 5 minutes
+        time.sleep(10)
+        time_slept += 10
+        course_application.refresh_from_db()
+    course_application.refresh_from_db()
+    if course_application.comparison_result:
+        return (True, course_application.comparison_result)
+    else:
+        # force it to stop
+        if course_application.running_comparison:
+            course_application.running_comparison = False
+            course_application.save()
+        return (False, "Comparison is still running. Please try again later.")
+
+def do_comparison_on_application(course_application):
+    if course_application.running_comparison:
+        return disallow_multiple_comparisons(course_application)
+    
+    if course_application.comparison_result is not None:
+        return (True, course_application.comparison_result)
+        
+    course_application.running_comparison = True
+    course_application.save()
+    try:
+        course1_syllabus = course_application.aus_syllabus
+        course2_syllabus = course_application.syllabus
+
+        compare_result = compare(course1_syllabus, course2_syllabus)
+        course_application.comparison_result = compare_result
+        course_application.running_comparison = False
+        course_application.save()
+        return (True, compare_result)
+    except Exception as e:
+        course_application.running_comparison = False
+        course_application.save()
+        return (False, str(e))

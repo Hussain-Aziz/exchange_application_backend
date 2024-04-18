@@ -78,6 +78,8 @@ class CourseApplication(models.Model):
     grade_required = models.CharField(max_length=50, blank=True, null=True)
     pre_requisites_met = models.BooleanField(null=True, blank=True)
     approved_status = models.BooleanField(blank=False, null=True)
+    comparison_result = models.JSONField(null=True, blank=True)
+    running_comparison = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['course_application_id']
