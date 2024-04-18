@@ -49,6 +49,7 @@ python manage.py test
 ```
 
 for coverage
+
 ```bash
 coverage run --source='.' manage.py test
 coverage report

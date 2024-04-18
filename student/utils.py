@@ -7,4 +7,6 @@ def get_user_from_token(request):
     return user
 
 def str2bool(v):
+    if isinstance(v, bool):
+        return v
     return v.strip('"').strip("'").strip("“").strip("”").lower() in ("yes", "true", "t", "1",)

@@ -1,4 +1,3 @@
-import re
 from django.http import JsonResponse
 from rest_framework.views import APIView
 import os
@@ -15,7 +14,6 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 import time
 from users.models import CourseApplication
-
 
 class Comparison(APIView):
     def get(self, request):
@@ -97,7 +95,6 @@ def pdf_read_with_retry(file, pdf_num):
     raise Exception(f"Failed to read the PDF file from {file}.")
     
 def compare(pdf1, pdf2):
-    print(f"Starting comparison between {pdf1} and {pdf2}")
     # read the text content from the PDF files in parallel
     with ThreadPoolExecutor() as executor:
         future1 = executor.submit(pdf_read_with_retry, pdf1, 1)
@@ -110,20 +107,21 @@ def compare(pdf1, pdf2):
     try:
         client = OpenAI() # requires defining the OPENAI_API_KEY environment variable
         response = client.chat.completions.create(
-            model="gpt-4-turbo-2024-04-09",
-                messages=[ 
-                    # provide the instructions using system role
-                    {"role": "system", "content": 'Act like you are a college professor who needs to compare the learning outcomes of two course\
-                                                    syllabi and decide whether or not they are equivalent. To compare their similarity, you have to\
-                                                    write bullet points for each of the learning outcomes in course 1 and explain in only 1-2 sentences\
-                                                    whether or not they are achieved in course 2. The output must be in JSON format where the key is the\
-                                                    course learning objective from course 1 and the value is the explanation. At the end, add a key to the\
-                                                    json called "match percentage" and have its value be the percentage of learning outcomes from course 1\
-                                                    that matched. Remember the response must be a valid JSON object with no nested objects.'},
-                    # provide the course syllabi as the user input                                                
-                    {"role": "user", "content": f"Course 1: {pdf1_text}"},
-                    {"role": "user", "content": f"Course 2: {pdf2_text}"},
-                ]
+            #model="gpt-4-turbo-2024-04-09",
+            model="gpt-3.5-turbo-0125",
+            messages=[ 
+                # provide the instructions using system role
+                {"role": "system", "content": 'Act like you are a college professor who needs to compare the learning outcomes of two course\
+                                                syllabi and decide whether or not they are equivalent. To compare their similarity, you have to\
+                                                write bullet points for each of the learning outcomes in course 1 and explain in only 1-2 sentences\
+                                                whether or not they are achieved in course 2. The output must be in JSON format where the key is the\
+                                                course learning objective from course 1 and the value is the explanation. At the end, add a key to the\
+                                                json called "match percentage" and have its value be the percentage of learning outcomes from course 1\
+                                                that matched. Remember the response must be a valid JSON object with no nested objects.'},
+                # provide the course syllabi as the user input                                                
+                {"role": "user", "content": f"Course 1: {pdf1_text}"},
+                {"role": "user", "content": f"Course 2: {pdf2_text}"},
+            ]
             )
     except OpenAIError as e:
         raise Exception(f"OpenAI Error: {str(e)}")   
