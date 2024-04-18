@@ -22,7 +22,7 @@ class StartApplicationAPI(APIView):
 
         user = get_user_from_token(request)
         
-        university = University.objects.filter(university_name=data['university']).first()
+        university = University.objects.filter(university_name=int(data['university'])).first()
         if university is None:
             university = University.objects.create(university_name=data['university'])
         

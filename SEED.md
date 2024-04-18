@@ -19,9 +19,9 @@ def seed():
     u4 = User(username="b00088793@aus.edu")
     u4.set_password("test")
     u4.save()
-    Faculty(user=u1, department=12, faculty_type=2).save()
-    Faculty(user=u2, department=12, faculty_type=0).save()
-    Faculty(user=u3, department=12, faculty_type=1).save()
+    Faculty(user=u1, department=13, faculty_type=2).save()
+    Faculty(user=u2, department=13, faculty_type=0).save()
+    Faculty(user=u3, department=13, faculty_type=1).save()
     Student(user=u4).save()
 ```
 

@@ -159,4 +159,4 @@ cython_debug/
 # PyCharm
 .idea/
 
-temp.pdf
+temp*.pdf
