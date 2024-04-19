@@ -8,6 +8,8 @@
 2. Download tesseract for the comparison of pdfs
     - windows: download from [here](https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-setup-3.05.00dev-205-ge205c59.exe) and set it up.
     - linux: run `sudo apt-get install -y tesseract-ocr && sudo apt-get install -y poppler-utils`
+3. Downlaod postgres thing
+  - `sudo apt-get install libpq-dev`
 
 ### Initial setup
 
@@ -20,16 +22,18 @@ git clone git@github.com:Hussain-Aziz/exchange_application_backend.git
 cd exchange_application_backend
 
 # setup virtual environment
-python -m venv exchange_application_venv --clear
-. .\exchange_application_venv\Scripts\activate
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt install python3.11
+sudo apt-get install python3.11-venv
+python3.11 -m venv exchange_application_venv --clear
+source ./exchange_application_venv/bin/activate
 
 # install dependencies
-pip install -r config\requirements\local.txt --require-virtualenv --quiet
+pip install -r config/requirements/base.txt
 
 # run database migrations
 python manage.py makemigrations --no-input --verbosity 0
 python manage.py migrate --no-input --verbosity 0
-python manage.py loaddata exchange_application/seeds/faculty.json
 ```
 
 ### Running the application
