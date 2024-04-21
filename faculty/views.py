@@ -46,6 +46,7 @@ class UploadSyllabus(APIView):
     
 class ApproveCourse(APIView):
     def post(self, request):
+        faculty = get_faculty(request)
         data = json.loads(request.body)
         
         course_application = CourseApplication.objects.filter(course_application_id=int(data['id'])).first()
@@ -59,7 +60,10 @@ class ApproveCourse(APIView):
         if data.get('preReqsMet') != None and data.get('preReqsMet') != '':
             course_application.pre_requisites_met = str2bool(data['preReqsMet'])
         if data.get('approved') != None and data.get('approved') != '':
-            course_application.approved_status = str2bool(data['approved'])
+            if faculty.faculty_type == 0 or faculty.faculty_type == 2:
+                course_application.approved_status = str2bool(data['approved'])
+            else:
+                course_application.delegated_approval = str2bool(data['approved'])
         if data.get('delegate') != None and data.get('delegate') != '':
             faculty = Faculty.objects.filter(user__username=data['delegate']).first()
             if faculty is None:
@@ -80,9 +84,13 @@ class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
         courses = courses.filter(approved_status__isnull=True)
 
         if faculty.faculty_type == 1 or faculty.faculty_type == 3 or faculty.faculty_type == 4:
-            courses = courses.filter(delegated_to=faculty)
+            courses = courses.filter(Q(delegated_to=faculty) & Q(delegated_approval__isnull=True))
         if faculty.faculty_type == 0 or faculty.faculty_type == 2:
-            courses = courses.filter(Q(delegated_to__isnull=True) | Q(delegated_to=faculty))
+            courses = courses.filter(
+                Q(delegated_to__isnull=True) # not delegated
+                | Q(delegated_to=faculty) # delegated to target
+                | Q(delegated_to__isnull=False) & Q(delegated_approval__isnull=False) # delegated and approved
+                )
 
         courses = course_search(self.request, courses)
         courses = get_course_by_id(self.request, courses)
