@@ -80,6 +80,7 @@ class CourseApplication(models.Model):
     approved_status = models.BooleanField(blank=False, null=True)
     comparison_result = models.JSONField(null=True, blank=True)
     running_comparison = models.BooleanField(default=False)
+    delegated_to = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         ordering = ['course_application_id']

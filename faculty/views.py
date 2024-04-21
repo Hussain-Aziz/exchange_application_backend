@@ -14,6 +14,7 @@ from users.views import do_comparison_on_application
 import json
 from threading import Thread
 
+
 class AvailableSyllabus(viewsets.ReadOnlyModelViewSet):
     pagination_class = CustomPagination
     serializer_class = CourseApplicationSerializer
@@ -59,6 +60,11 @@ class ApproveCourse(APIView):
             course_application.pre_requisites_met = str2bool(data['preReqsMet'])
         if data.get('approved') != None and data.get('approved') != '':
             course_application.approved_status = str2bool(data['approved'])
+        if data.get('delegate') != None and data.get('delegate') != '':
+            faculty = Faculty.objects.filter(user__username=data['delegate']).first()
+            if faculty is None:
+                return JsonResponse({"message": "Faculty not found"}, status=404)
+            course_application.delegated_to = faculty
         course_application.save()
         
         return JsonResponse({"message": "Syllabus uploaded successfully"}, status=201)
@@ -69,7 +75,15 @@ class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self): # type: ignore
         faculty = get_faculty(self.request)
         
-        courses = CourseApplication.objects.filter(department=faculty.department).filter(aus_syllabus__isnull=False)
+        courses = CourseApplication.objects.filter(department=faculty.department)
+        courses = courses.filter(aus_syllabus__isnull=False)
+        courses = courses.filter(approved_status__isnull=True)
+
+        if faculty.faculty_type == 1 or faculty.faculty_type == 3 or faculty.faculty_type == 4:
+            courses = courses.filter(delegated_to=faculty)
+        if faculty.faculty_type == 0 or faculty.faculty_type == 2:
+            courses = courses.filter(Q(delegated_to__isnull=True) | Q(delegated_to=faculty))
+
         courses = course_search(self.request, courses)
         courses = get_course_by_id(self.request, courses)
             
