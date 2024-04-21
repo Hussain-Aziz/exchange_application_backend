@@ -13,8 +13,12 @@
 
 ```bash
 # clone the repository
-git clone https://github.com/Hussain-Aziz/exchange_application_backend
+mkdir exchange_application_backend
 cd exchange_application_backend
+git init
+git remote add origin https://github.com/Hussain-Aziz/exchange_application_backend.git
+git fetch
+git pull origin master
 
 # setup virtual environment
 sudo add-apt-repository ppa:deadsnakes/ppa -y
@@ -82,7 +86,12 @@ then restart nginx `sudo systemctl restart nginx`
 
 ## Running the application
 
-```bash
+Create or go to previous screen
+- Create: `screen -S app`
+- Resume: `screen -r app`
+
+Run the following
+``` bash
 source ./exchange_application_venv/bin/activate
 python manage.py runserver 0.0.0.0:8000 --settings=exchange_application.prod
 ```
