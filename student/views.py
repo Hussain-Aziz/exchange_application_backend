@@ -81,6 +81,7 @@ class AddCourseAPI(APIView):
             course_credits = int(data['courseCredits']),
             aus_course = data['ausCourse'],
             syllabus = data['hostUniversitySyllabus'],
+            aus_syllabus = data['ausSyllabus'],
             department = department,
         )
         new_course.save()
