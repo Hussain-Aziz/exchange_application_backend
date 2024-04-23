@@ -1,4 +1,3 @@
-from os import name
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -10,7 +9,6 @@ FACULTY_CHOICES = (
     (4, 'Associate_Dean'),
     (5, 'Scholarship'),
     (6, 'Sponsorship'),
-    (7, 'IXO'),
 )
 
 DEPARTMENTS = (
@@ -41,7 +39,10 @@ DEPARTMENTS = (
 class Faculty(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.PositiveIntegerField(choices=DEPARTMENTS, default=0)
-    faculty_type = models.PositiveIntegerField(choices=FACULTY_CHOICES, default=0)    
+    faculty_type = models.PositiveIntegerField(choices=FACULTY_CHOICES, default=0)
+
+class Admin(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
 class University(models.Model):
     university_id = models.AutoField(primary_key=True)

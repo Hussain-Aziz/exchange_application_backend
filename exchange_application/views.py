@@ -5,7 +5,7 @@ from rest_framework import permissions, serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from knox.views import LoginView as KnoxLoginView
 
-from users.models import Student, Faculty
+from users.models import Student, Faculty, Admin
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,6 +37,9 @@ class LoginView(KnoxLoginView):
         elif Faculty.objects.filter(user=user).exists():
             extra_data = {"is_faculty": True,
                           "faculty_type": Faculty.objects.get(user=user).faculty_type}
+        elif Admin.objects.filter(user=user).exists():
+            extra_data = {"is_admin": True}
+        
 
         response = super(LoginView, self).post(request, format=None)
         response.data['user'].update(extra_data) # type: ignore
