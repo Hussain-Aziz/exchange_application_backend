@@ -22,7 +22,7 @@ class FacultyList(APIView):
     
     def post(self, request):
         data = json.loads(request.body)
-        faculty = Faculty.objects.get(id=data['id'])
+        faculty = Faculty.objects.get(id=int(data['id']))
         if data.get('department') != None and data.get('department') != '':
             faculty.department = data['department']
         if data.get('faculty_type') != None and data.get('faculty_type') != '':
