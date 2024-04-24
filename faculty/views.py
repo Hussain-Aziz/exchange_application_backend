@@ -1,3 +1,4 @@
+from httpx import delete
 from rest_framework import viewsets
 
 from users.models import *
@@ -72,6 +73,17 @@ class ApproveCourse(APIView):
         course_application.save()
         
         return JsonResponse({"message": "Syllabus uploaded successfully"}, status=201)
+    
+    def delete(self, request):
+        data = json.loads(request.body)
+        
+        course_application = CourseApplication.objects.filter(course_application_id=int(data['id'])).first()
+        if course_application is None:
+            return JsonResponse({"message": "Course not found"}, status=404)
+        
+        course_application.delete()
+        
+        return JsonResponse({"message": "Course deleted successfully"}, status=204)
         
 class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
     pagination_class = CustomPagination
