@@ -82,8 +82,8 @@ class CourseApplication(models.Model):
     comparison_result = models.JSONField(null=True, blank=True)
     running_comparison = models.BooleanField(default=False)
     comments = models.TextField(null=True, blank=True)
-    delegated_to = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, blank=True)
+    delegated_to = models.EmailField(null=True, blank=True)
     delegated_approval = models.BooleanField(null=True, blank=True)
-
+    force_approval_to = models.EmailField(null=True, blank=True)
     class Meta:
         ordering = ['course_application_id']
