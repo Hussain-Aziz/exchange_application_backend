@@ -1,6 +1,6 @@
-from httpx import delete
 from rest_framework import viewsets
 
+import faculty
 from users.models import *
 from student.utils import *
 from student.seralizers import *
@@ -14,11 +14,17 @@ from student.utils import get_user_from_token
 from users.views import do_comparison_on_application
 import json
 from threading import Thread
+from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
 
+class IsFacultyUser(permissions.BasePermission):
+    def has_permission(self, request, view): # type: ignore
+        return Faculty.objects.filter(user=request.user).exists()
 
 class AvailableSyllabus(viewsets.ReadOnlyModelViewSet):
     pagination_class = CustomPagination
     serializer_class = CourseApplicationSerializer
+    permission_classes = [IsFacultyUser, IsAuthenticated]
     def get_queryset(self): # type: ignore
         faculty = get_faculty(self.request)
 
@@ -29,6 +35,7 @@ class AvailableSyllabus(viewsets.ReadOnlyModelViewSet):
         return courses
     
 class UploadSyllabus(APIView):
+    permission_classes = [IsFacultyUser, IsAuthenticated]
     def post(self, request):
         data = json.loads(request.body)
         
@@ -46,6 +53,7 @@ class UploadSyllabus(APIView):
     
     
 class ApproveCourse(APIView):
+    permission_classes = [IsFacultyUser, IsAuthenticated]
     def post(self, request):
         faculty = get_faculty(request)
         data = json.loads(request.body)
@@ -73,19 +81,9 @@ class ApproveCourse(APIView):
         course_application.save()
         
         return JsonResponse({"message": "Syllabus uploaded successfully"}, status=201)
-    
-    def delete(self, request):
-        data = json.loads(request.body)
-        
-        course_application = CourseApplication.objects.filter(course_application_id=int(data['id'])).first()
-        if course_application is None:
-            return JsonResponse({"message": "Course not found"}, status=404)
-        
-        course_application.delete()
-        
-        return JsonResponse({"message": "Course deleted successfully"}, status=204)
         
 class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsFacultyUser, IsAuthenticated]
     pagination_class = CustomPagination
     serializer_class = CourseApplicationSerializer
     def get_queryset(self): # type: ignore

@@ -14,8 +14,15 @@ from django.http import JsonResponse
 
 from .utils import get_user_from_token
 import json
+from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
+
+class IsStudentUser(permissions.BasePermission):
+    def has_permission(self, request, view): # type: ignore
+        return Student.objects.filter(user=request.user).exists()
 
 class StartApplicationAPI(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
     def post(self, request):
         # Load the data from the request body
         data = json.loads(request.body)
@@ -44,6 +51,7 @@ class StartApplicationAPI(APIView):
         return JsonResponse({"message": "Student added successfully"}, status=201)
     
 class ApplicationInfoAPI(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
     def get(self, request):
         user = get_user_from_token(request)
         student = Student.objects.filter(user=user).first()
@@ -55,6 +63,7 @@ class ApplicationInfoAPI(APIView):
 
 
 class AddCourseAPI(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
     def post(self, request):
         # Load the data from the request body
         data = json.loads(request.body)
@@ -94,6 +103,17 @@ class AddCourseAPI(APIView):
         courses = CourseApplication.objects.filter(student=student)
         serializer = CourseApplicationSerializer(courses, many=True)
         return JsonResponse(serializer.data, safe=False)
+    
+    def delete(self, request):
+        data = json.loads(request.body)
+        
+        course_application = CourseApplication.objects.filter(course_application_id=int(data['id'])).first()
+        if course_application is None:
+            return JsonResponse({"message": "Course not found"}, status=404)
+        
+        course_application.delete()
+        
+        return JsonResponse({"message": "Course deleted successfully"}, status=204)
 
 
 course_to_deparment = {

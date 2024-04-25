@@ -13,8 +13,15 @@ from student.utils import get_user_from_token
 from users.views import do_comparison_on_application
 import json
 from threading import Thread
+from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
+
+class IsAdminUser(permissions.BasePermission):
+    def has_permission(self, request, view): # type: ignore
+        return Admin.objects.filter(user=request.user).exists()
 
 class FacultyList(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
     def get(self, request):
         faculty = Faculty.objects.all()
         serializer = FacultySerializer(faculty, many=True)
