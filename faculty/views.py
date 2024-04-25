@@ -73,6 +73,8 @@ class ApproveCourse(APIView):
                 course_application.approved_status = str2bool(data['approved'])
             else:
                 course_application.delegated_approval = str2bool(data['approved'])
+        if data.get('comments') != None and data.get('comments') != '':
+            course_application.comments = data['comments']
         if data.get('delegate') != None and data.get('delegate') != '':
             faculty = Faculty.objects.filter(user__username=data['delegate']).first()
             if faculty is None:

@@ -81,6 +81,7 @@ class CourseApplication(models.Model):
     approved_status = models.BooleanField(blank=False, null=True)
     comparison_result = models.JSONField(null=True, blank=True)
     running_comparison = models.BooleanField(default=False)
+    comments = models.TextField(null=True, blank=True)
     delegated_to = models.ForeignKey(Faculty, on_delete=models.CASCADE, null=True, blank=True)
     delegated_approval = models.BooleanField(null=True, blank=True)
 
