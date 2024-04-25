@@ -69,17 +69,14 @@ class ApproveCourse(APIView):
         if data.get('preReqsMet') != None and data.get('preReqsMet') != '':
             course_application.pre_requisites_met = str2bool(data['preReqsMet'])
         if data.get('approved') != None and data.get('approved') != '':
-            if faculty.faculty_type == 0 or faculty.faculty_type == 2:
+            if faculty.faculty_type == 0 or faculty.faculty_type == 2 or course_application.force_approval_to == faculty.user.username:
                 course_application.approved_status = str2bool(data['approved'])
             else:
                 course_application.delegated_approval = str2bool(data['approved'])
         if data.get('comments') != None and data.get('comments') != '':
             course_application.comments = data['comments']
         if data.get('delegate') != None and data.get('delegate') != '':
-            faculty = Faculty.objects.filter(user__username=data['delegate']).first()
-            if faculty is None:
-                return JsonResponse({"message": "Faculty not found"}, status=404)
-            course_application.delegated_to = faculty
+            course_application.delegated_to = data['delegate']
         course_application.save()
         
         return JsonResponse({"message": "Syllabus uploaded successfully"}, status=201)
@@ -96,11 +93,11 @@ class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
         courses = courses.filter(approved_status__isnull=True)
 
         if faculty.faculty_type == 1 or faculty.faculty_type == 3 or faculty.faculty_type == 4:
-            courses = courses.filter(Q(delegated_to=faculty) & Q(delegated_approval__isnull=True))
+            courses = courses.filter(Q(delegated_to=faculty.user.username) & Q(delegated_approval__isnull=True))
         if faculty.faculty_type == 0 or faculty.faculty_type == 2:
             courses = courses.filter(
                 Q(delegated_to__isnull=True) # not delegated
-                | Q(delegated_to=faculty) # delegated to target
+                | Q(delegated_to=faculty.user.username) # delegated to target
                 | Q(delegated_to__isnull=False) & Q(delegated_approval__isnull=False) # delegated and approved
                 )
 

@@ -16,6 +16,8 @@ from .utils import get_user_from_token
 import json
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
+from threading import Thread
+from users.views import do_comparison_on_application
 
 class IsStudentUser(permissions.BasePermission):
     def has_permission(self, request, view): # type: ignore
@@ -90,10 +92,15 @@ class AddCourseAPI(APIView):
             course_credits = int(data['courseCredits']),
             aus_course = data['ausCourse'],
             syllabus = data['hostUniversitySyllabus'],
-            aus_syllabus = data['ausSyllabus'],
             department = department,
         )
+
+        if data.get('ausSyllabus') != None and data.get('ausSyllabus') != '':
+            new_course.aus_syllabus = data['ausSyllabus']
         new_course.save()
+
+        if new_course.syllabus and new_course.aus_syllabus:
+            Thread(target=do_comparison_on_application, args=(new_course,)).start()
         
         return JsonResponse({"message": "Course added successfully"}, status=201)
 

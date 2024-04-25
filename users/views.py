@@ -139,6 +139,7 @@ def compare(pdf1, pdf2):
     return primary_answer
 
 def disallow_multiple_comparisons(course_application):
+    print("Comparison is already running. Waiting for the result...")
     time_slept = 0
     while course_application.running_comparison and time_slept < 300: # max 5 minutes
         time.sleep(10)
