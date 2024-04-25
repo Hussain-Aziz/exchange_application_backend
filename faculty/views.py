@@ -88,17 +88,21 @@ class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self): # type: ignore
         faculty = get_faculty(self.request)
         
-        courses = CourseApplication.objects.filter(department=faculty.department)
-        courses = courses.filter(aus_syllabus__isnull=False)
-        courses = courses.filter(approved_status__isnull=True)
+        courses = CourseApplication.objects.all()
 
-        if faculty.faculty_type == 1 or faculty.faculty_type == 3 or faculty.faculty_type == 4:
-            courses = courses.filter(Q(delegated_to=faculty.user.username) & Q(delegated_approval__isnull=True))
-        if faculty.faculty_type == 0 or faculty.faculty_type == 2:
+        courses = courses.filter(aus_syllabus__isnull=False) # remove courses that dont have syllabus yet
+        courses = courses.filter(approved_status__isnull=True) # remove courses that are already approved
+
+        if faculty.faculty_type == 1 or faculty.faculty_type == 3 or faculty.faculty_type == 4: # tf, advisor, associate dean
             courses = courses.filter(
-                Q(delegated_to__isnull=True) # not delegated
-                | Q(delegated_to=faculty.user.username) # delegated to target
-                | Q(delegated_to__isnull=False) & Q(delegated_approval__isnull=False) # delegated and approved
+                (Q(delegated_to=faculty.user.username) & Q(delegated_approval__isnull=True)) # delegated to but not suggested yet
+                | Q(force_approval_to=faculty.user.username) # force approval target
+                )
+        if faculty.faculty_type == 0 or faculty.faculty_type == 2: # aa, hod
+            courses = courses.filter(
+                (Q(delegated_to__isnull=True) & Q(department=faculty.department)) # hod/aa of department and its not delegated
+                | (Q(delegated_to=faculty.user.username) | Q(force_approval_to=faculty.user.username)) # delegated or force approval target
+                | (Q(delegated_to__isnull=False) & Q(delegated_approval__isnull=False) & Q(department=faculty.department)) # delegated and suggestion given and same department
                 )
 
         courses = course_search(self.request, courses)
