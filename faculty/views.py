@@ -1,6 +1,7 @@
+import datetime
 from rest_framework import viewsets
 
-import faculty
+from admin.views import filter_student_by_id, get_student_by_id, student_search
 from users.models import *
 from student.utils import *
 from student.seralizers import *
@@ -123,6 +124,58 @@ class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
         courses = get_course_by_id(self.request, courses)
             
         return courses
+    
+class StudentList(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsFacultyUser, IsAuthenticated]
+    pagination_class = CustomPagination
+    serializer_class = StudentApplicationSerializer
+    
+    def get_queryset(self): # type: ignore
+        faculty = get_faculty(self.request)
+
+        students = Student.objects.all()
+
+        if faculty.faculty_type == 3:
+            students = Student.objects.filter(department=faculty.department).filter(submitted_form=True).filter(ixo_details__advisor_approval__isnull=True)
+        if faculty.faculty_type == 4:
+            students = Student.objects.filter(present_college=faculty.college).filter(submitted_form=True).filter(ixo_details__associate_dean_approval__isnull=True)
+        if faculty.faculty_type == 5:
+            students = Student.objects.filter(submitted_form=True).filter(ixo_details__scholarship_approval__isnull=True)
+        if faculty.faculty_type == 6:
+            students = Student.objects.filter(submitted_form=True).filter(ixo_details__sponsorship_approval__isnull=True)
+
+        students = student_search(self.request, students)
+        students = filter_student_by_id(self.request, students)
+        return students
+
+class ApproveStudent(APIView):
+    def post(self, request):
+        faculty = get_faculty(request)
+        data = json.loads(request.body)
+        
+        student = Student.objects.filter(id=int(data['id'])).first()
+        if student is None:
+            return JsonResponse({"message": "Student not found"}, status=404)
+        
+        if student.ixo_details is None:
+            return JsonResponse({"message": "Student application not submitted"}, status=400)
+        
+        if faculty.faculty_type == 3:
+            student.ixo_details.advisor_approval = str2bool(data['approved'])
+            student.ixo_details.advisor_approval_date = datetime.datetime.now()
+        if faculty.faculty_type == 4:
+            student.ixo_details.associate_dean_approval = str2bool(data['approved'])
+            student.ixo_details.associate_dean_approval_date = datetime.datetime.now()
+        if faculty.faculty_type == 5:
+            student.ixo_details.scholarship_approval = str2bool(data['approved'])
+            student.ixo_details.scholarship_approval_date = datetime.datetime.now()
+        if faculty.faculty_type == 6:
+            student.ixo_details.sponsorship_approval = str2bool(data['approved'])
+            student.ixo_details.sponsorship_approval_date = datetime.datetime.now()
+        
+        student.ixo_details.save()
+        
+        return JsonResponse({"message": "Student approved successfully"}, status=201)
     
 
 def get_faculty(request):

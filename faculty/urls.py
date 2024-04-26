@@ -10,4 +10,6 @@ urlpatterns = [
     path('upload_syllabus/', UploadSyllabus.as_view(), name='upload_syllabus'),
     # post endpoint to approve course (body: programArea, gradeRequirement, preReqsMet, approved)
     path('approve_course/', ApproveCourse.as_view(), name='approve_course'),
+    path('approve_student/', ApproveStudent.as_view(), name='approve_student'),
+    path('list_students/', StudentList.as_view({'get': 'list'}), name='list_students'),
 ]

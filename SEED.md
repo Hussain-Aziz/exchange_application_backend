@@ -24,22 +24,32 @@ def seed():
     u = User(username="aa@aus.edu")
     u.set_password("test")
     u.save()
-    Faculty.objects.create(user=u, department=13, faculty_type=0)
+    Faculty.objects.create(user=u, department=13, faculty_type=0, college=3)
 
     u = User(username="hod@aus.edu")
     u.set_password("test")
     u.save()
-    Faculty.objects.create(user=u, department=13, faculty_type=2)
+    Faculty.objects.create(user=u, department=13, faculty_type=2, college=3)
 
     u = User(username="tf01@aus.edu")
     u.set_password("test")
     u.save()
-    Faculty.objects.create(user=u, department=13, faculty_type=1)
+    Faculty.objects.create(user=u, department=13, faculty_type=1, college=3)
 
     u = User(username="tf02@aus.edu")
     u.set_password("test")
     u.save()
-    Faculty.objects.create(user=u, department=13, faculty_type=1)
+    Faculty.objects.create(user=u, department=13, faculty_type=1, college=3)
+
+    u = User(username="advisor@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=3, college=3)
+    
+    u = User(username="adean@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=4, college=3)
 
     u = User(username="admin@aus.edu")
     u.set_password("test")
