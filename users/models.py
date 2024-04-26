@@ -51,7 +51,19 @@ class University(models.Model):
     def __str__(self):
         return self.university_name
     
+class IXODetails(models.Model):
+    initial_approval_id = models.AutoField(primary_key=True)
+    moe_approval = models.BooleanField(null=True, blank=True)
+    usdoe_approval = models.BooleanField(null=True, blank=True)
+    acreditted = models.BooleanField(null=True, blank=True)
+    acreditted_comments = models.TextField(null=True, blank=True)
+    agreement = models.BooleanField(null=True, blank=True)
+    initial_approval_date = models.DateField(null=True, blank=True)
+    student_type = models.CharField(max_length=250, null=True, blank=True)
+    final_approval = models.BooleanField(null=True, blank=True)
+    
 class Student(models.Model):
+    id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     aus_id = models.CharField(max_length=250, blank=True, null=True)
     name = models.CharField(max_length=250, null=True, blank=True)
@@ -63,6 +75,12 @@ class Student(models.Model):
     current_standing = models.CharField(max_length=250, null=True, blank=True)
     host_contact_name = models.CharField(max_length=250, null=True, blank=True)
     host_contact_email = models.EmailField(max_length=250, null=True, blank=True)
+    ixo_details = models.ForeignKey(IXODetails, on_delete=models.CASCADE, null=True, blank=True)
+    submitted_form = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['aus_id']
+
 
 class CourseApplication(models.Model):
     course_application_id = models.AutoField(primary_key=True)
@@ -85,5 +103,7 @@ class CourseApplication(models.Model):
     delegated_to = models.EmailField(null=True, blank=True)
     delegated_approval = models.BooleanField(null=True, blank=True)
     force_approval_to = models.EmailField(null=True, blank=True)
+    approved_by = models.EmailField(null=True, blank=True)
+    
     class Meta:
         ordering = ['course_application_id']

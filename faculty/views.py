@@ -78,6 +78,20 @@ class ApproveCourse(APIView):
         if data.get('delegate') != None and data.get('delegate') != '':
             course_application.delegated_to = data['delegate']
         course_application.save()
+
+        if course_application.approved_status:
+            if course_application.force_approval_to is not None:
+                course_application.approved_by = course_application.force_approval_to
+                course_application.save()
+            elif faculty.faculty_type == 2:
+                course_application.approved_by = faculty.user.username
+                course_application.save()
+            else:
+                hod = Faculty.objects.filter(department=faculty.department, faculty_type=2).first()
+                if hod is not None:
+                    course_application.approved_by = hod.user.username
+                    course_application.save()
+        
         
         return JsonResponse({"message": "Syllabus uploaded successfully"}, status=201)
         

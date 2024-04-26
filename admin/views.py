@@ -1,6 +1,6 @@
+import datetime
 from rest_framework import viewsets
 
-from users.serializers import *
 from users.models import *
 from student.utils import *
 from student.seralizers import *
@@ -45,12 +45,54 @@ class StudentList(viewsets.ReadOnlyModelViewSet):
     serializer_class = StudentApplicationSerializer
     
     def get_queryset(self): # type: ignore
-        students = Student.objects.filter(aus_id__isnull=False)
+        only_new_students = str2bool(self.request.query_params.get('only_new_students', False)) # type: ignore
+        only_final_approval = str2bool(self.request.query_params.get('only_final_approval', False)) # type: ignore
+        only_in_progress = str2bool(self.request.query_params.get('only_in_progress', False)) # type: ignore
+
+        if only_new_students:
+            students = Student.objects.filter(ixo_details__isnull=True).filter(aus_id__isnull=False)
+        elif only_final_approval:
+            students = Student.objects.filter(submitted_form=True)
+        elif only_in_progress:
+            students = Student.objects.filter(ixo_details__isnull=False)
+        else:
+            students = Student.objects.all()
         students = student_search(self.request, students)
         students = filter_student_by_id(self.request, students)
         return students
     
+class InitialApproval(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+    def post(self, request):
+        data = json.loads(request.body)
+        student = Student.objects.get(id=data['id'])
+
+        ixo_details = IXODetails.objects.create(
+            moe_approval=str2bool(data['moeApproval']),
+            usdoe_approval=str2bool(data['usdoeApproval']),
+            acreditted=str2bool(data['acreditted']),
+            acreditted_comments=data['acredittedComments'],
+            agreement=str2bool(data['agreement']),
+            initial_approval_date= datetime.datetime.now(),
+        )
+        student.ixo_details = ixo_details
+        student.save()
+        return JsonResponse({'message': 'Initial approval saved successfully'}, safe=False)
+    
+class FinalApproval(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+    def post(self, request):
+        data = json.loads(request.body)
+        student = Student.objects.get(id=data['id'])
+        if student.ixo_details is None:
+            return JsonResponse({'message': 'Initial approval not found'}, safe=False)
+        student.ixo_details.student_type = data['studentType'] 
+        student.ixo_details.final_approval = str2bool(data['finalApproval'])
+        student.ixo_details.save()
+        return JsonResponse({'message': 'Final approval saved successfully'}, safe=False)
+    
 class CoursesList(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
     def get(self, request):
         student = get_student_by_id(request)
         courses = CourseApplication.objects.filter(student=student)
@@ -99,13 +141,11 @@ def filter_student_by_id(request, students):
     if id is None or id == '':
         return students
     
-    print(id)
-    
-    students = students.filter(aus_id=id)
+    students = students.filter(id=id)
     
     return students
 
 def get_student_by_id(request):
     id = request.query_params.get('id', None) # type: ignore
-    student = Student.objects.filter(aus_id=id).first()
+    student = Student.objects.filter(id=id).first()
     return student

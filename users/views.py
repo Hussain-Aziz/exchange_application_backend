@@ -117,7 +117,7 @@ def compare(pdf1, pdf2):
                                                 whether or not they are achieved in course 2. The output must be in JSON format where the key is the\
                                                 course learning objective from course 1 and the value is the explanation. At the end, add a key to the\
                                                 json called "match percentage" and have its value be the percentage of learning outcomes from course 1\
-                                                that matched. Remember the response must be a valid JSON object with no nested objects.'},
+                                                that matched. Remember the response must be a valid JSON object with no nested objects and must have a match percentage.'},
                 # provide the course syllabi as the user input                                                
                 {"role": "user", "content": f"Course 1: {pdf1_text}"},
                 {"role": "user", "content": f"Course 2: {pdf2_text}"},
