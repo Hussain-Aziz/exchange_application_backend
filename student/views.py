@@ -1,14 +1,6 @@
-from rest_framework import viewsets
-
 from users.models import *
 from student.seralizers import *
-from users.pagination import CustomPagination
-
-from django.shortcuts import render
-from django.http import HttpResponse
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from users.models import Student
 from django.http import JsonResponse
 
@@ -18,6 +10,7 @@ from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
 from threading import Thread
 from users.views import do_comparison_on_application
+from users.models import COLLEGES
 
 class IsStudentUser(permissions.BasePermission):
     def has_permission(self, request, view): # type: ignore
@@ -34,6 +27,8 @@ class StartApplicationAPI(APIView):
         university = University.objects.filter(university_name=data['university']).first()
         if university is None:
             university = University.objects.create(university_name=data['university'])
+
+        college_dict = dict((y, x) for x, y in COLLEGES)
         
         student = Student.objects.filter(user=user).first()
         if student is None:
@@ -43,11 +38,12 @@ class StartApplicationAPI(APIView):
         student.university = university
         student.phone_num = data['mobileNumber']
         student.expected_graduation =  data['expectedGraduation']
-        student.present_college =  data['presentCollege']
+        student.present_college =  college_dict[data['presentCollege']]
         student.present_major =  data['presentMajor']
         student.current_standing =  data['currentStanding']
         student.host_contact_name =  data['hostContactName']
         student.host_contact_email =  data['hostContactEmail']
+        student.department = data['department']
         student.save()
         
         return JsonResponse({"message": "Student added successfully"}, status=201)
@@ -220,4 +216,28 @@ course_to_deparment = {
     "VIS": 2,
     "WRI": 5,
     "WST": 0,
+}
+
+department_to_college = {
+    1: "CAAD",
+    2: "CAAD",
+    3: "CAS",
+    4: "CAS",
+    5: "CAS",
+    6: "CAS",
+    7: "CAS",
+    8: "CAS",
+    9: "CAS",
+    10: "CAS",
+    11: "CEN",
+    12: "CEN",
+    13: "CEN",
+    14: "CEN",
+    15: "CEN",
+    16: "CEN",
+    17: "SBA",
+    18: "SBA",
+    19: "SBA",
+    20: "SBA",
+    21: "SBA",
 }

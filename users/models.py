@@ -36,9 +36,18 @@ DEPARTMENTS = (
     (21, "Marketing and Information Systems"),
 )
 
+COLLEGES = (
+    (0, "Unknown"),
+    (1, "CAAD"),
+    (2, "CAS"),
+    (3, "CEN"),
+    (4, "SBA"),
+)
+
 class Faculty(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.PositiveIntegerField(choices=DEPARTMENTS, default=0)
+    college = models.PositiveIntegerField(choices=COLLEGES, default=0)
     faculty_type = models.PositiveIntegerField(choices=FACULTY_CHOICES, default=0)
 
 class Admin(models.Model):
@@ -60,7 +69,16 @@ class IXODetails(models.Model):
     agreement = models.BooleanField(null=True, blank=True)
     initial_approval_date = models.DateField(null=True, blank=True)
     student_type = models.CharField(max_length=250, null=True, blank=True)
-    final_approval = models.BooleanField(null=True, blank=True)
+    advisor_approval = models.BooleanField(null=True, blank=True)
+    advisor_approval_date = models.DateField(null=True, blank=True)
+    associate_dean_approval = models.BooleanField(null=True, blank=True)
+    associate_dean_approval_date = models.DateField(null=True, blank=True)
+    scholarship_approval = models.BooleanField(null=True, blank=True)
+    scholarship_approval_date = models.DateField(null=True, blank=True)
+    sponsorship_approval = models.BooleanField(null=True, blank=True)
+    sponsorship_approval_date = models.DateField(null=True, blank=True)
+    ixo_approval = models.BooleanField(null=True, blank=True)
+    ixo_approval_date = models.DateField(null=True, blank=True)
     
 class Student(models.Model):
     id = models.AutoField(primary_key=True)
@@ -70,8 +88,9 @@ class Student(models.Model):
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, blank=True)
     phone_num = models.CharField(max_length=15, null=True, blank=True)
     expected_graduation = models.CharField(max_length=250, null=True, blank=True)
-    present_college = models.CharField(max_length=250, null=True, blank=True)
+    present_college = models.PositiveIntegerField(choices=COLLEGES, default=0, null=True)
     present_major = models.CharField(max_length=250, null=True, blank=True)
+    department = models.IntegerField(choices=DEPARTMENTS, default=0, null=True)
     current_standing = models.CharField(max_length=250, null=True, blank=True)
     host_contact_name = models.CharField(max_length=250, null=True, blank=True)
     host_contact_email = models.EmailField(max_length=250, null=True, blank=True)
