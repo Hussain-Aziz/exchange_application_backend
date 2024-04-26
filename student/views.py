@@ -135,6 +135,19 @@ class AddCourseAPI(APIView):
         return JsonResponse({"message": "Course deleted successfully"}, status=204)
 
 
+class SubmitApplication(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
+    def post(self, request):
+        user = get_user_from_token(request)
+        student = Student.objects.filter(user=user).first()
+        if student is None:
+            return JsonResponse({"message": "Student not found"}, status=404)
+        
+        student.submitted_form = True
+        student.save()
+        
+        return JsonResponse({"message": "Application submitted successfully"}, status=201)
+
 course_to_deparment = {
     "ABRD": 0,
     "ACC": 17,
