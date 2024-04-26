@@ -52,6 +52,18 @@ class StartApplicationAPI(APIView):
         
         return JsonResponse({"message": "Student added successfully"}, status=201)
     
+    def delete(self, request):
+        user = get_user_from_token(request)
+        student = Student.objects.filter(user=user).first()
+        if student is None:
+            return JsonResponse({"message": "Student not found"}, status=404)
+        
+        student.delete()
+
+        Student.objects.create(user=user)
+        
+        return JsonResponse({"message": "Student deleted successfully"}, status=204)
+    
 class ApplicationInfoAPI(APIView):
     permission_classes = [IsAuthenticated, IsStudentUser]
     def get(self, request):
