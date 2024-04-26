@@ -10,16 +10,17 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 from django.db.models import Q
 
-from student.utils import get_user_from_token
-from users.views import do_comparison_on_application
 import json
-from threading import Thread
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
 
 class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view): # type: ignore
         return Admin.objects.filter(user=request.user).exists()
+    
+class IsAdminOrFacultyUser(permissions.BasePermission):
+    def has_permission(self, request, view): # type: ignore
+        return Admin.objects.filter(user=request.user).exists() or Faculty.objects.filter(user=request.user).exists() 
 
 class FacultyList(APIView):
     permission_classes = [IsAdminUser, IsAuthenticated]
@@ -87,12 +88,13 @@ class FinalApproval(APIView):
         if student.ixo_details is None:
             return JsonResponse({'message': 'Initial approval not found'}, safe=False)
         student.ixo_details.student_type = data['studentType'] 
-        student.ixo_details.final_approval = str2bool(data['finalApproval'])
+        student.ixo_details.ixo_approval = str2bool(data['finalApproval'])
+        student.ixo_details.ixo_approval_date = datetime.datetime.now()
         student.ixo_details.save()
         return JsonResponse({'message': 'Final approval saved successfully'}, safe=False)
     
 class CoursesList(APIView):
-    permission_classes = [IsAdminUser, IsAuthenticated]
+    permission_classes = [IsAdminOrFacultyUser, IsAuthenticated]
     def get(self, request):
         student = get_student_by_id(request)
         courses = CourseApplication.objects.filter(student=student)

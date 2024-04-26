@@ -15,7 +15,7 @@ class IXODetailsSerializer(serializers.ModelSerializer):
 class StudentApplicationSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     university = UniversitySerializer()
-    ixo_details = IXODetails()
+    ixo_details = IXODetailsSerializer()
     class Meta:
         model = Student
         fields = '__all__'  
