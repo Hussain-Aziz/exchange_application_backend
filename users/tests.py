@@ -5,7 +5,7 @@ from django.urls import reverse
 from knox.auth import AuthToken
 from threading import Thread
 from users.serializers import StudentApplicationSerializer
-from exchange_application.views import UserSerializer
+from student.seralizers import FacultySerializer
 import time
 from django.test import TestCase
 
@@ -36,9 +36,12 @@ class TestSeralizer(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='testuser', password='testpass')
         self.student = Student.objects.create(user=self.user, aus_id='b00012345')
+        self.user2 = User.objects.create_user(username='testuser2', password='testpass')
+        self.faculty = Faculty.objects.create(user=self.user2, department=13, faculty_type=0)
     
     def test_seralizer(self):
         StudentApplicationSerializer(self.student)
+        FacultySerializer(self.faculty)
 
         
 class TestApplicationComparison(APITestCase):

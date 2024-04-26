@@ -3,7 +3,7 @@ from . import views
 
 
 from django.urls import path
-from .views import StartApplicationAPI, AddCourseAPI, ApplicationInfoAPI
+from .views import *
 
 urlpatterns = [
     # post endpoint to start student application (body: id, name, university, mobileNumber, expectedGraduation, presentCollege, presentMajor, currentStanding, hostContactName, hostContactEmail)
@@ -13,5 +13,7 @@ urlpatterns = [
     # post endpoint to add course to their application (body: course_name, course_code, course_credits, course_semester, course_year)
     # get endpoint to get list of courses in their application
     path('courses/', AddCourseAPI.as_view(), name='courses'),
+    # post endpoint to submit application
+    path('submit_application/', SubmitApplication.as_view(), name='submit_application'),
 ]
 

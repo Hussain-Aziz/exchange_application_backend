@@ -5,24 +5,57 @@ run `python manage.py shell` and paste the seed function inside
 ```python
 def seed():
     from django.contrib.auth.models import User
-    from users.models import Faculty, Student
+    from users.models import Faculty, Student, Admin
 
-    u1 = User(username="izualkernan@aus.edu")
-    u1.set_password("test")
-    u1.save()
-    u2 = User(username="dcjuan@aus.edu")
-    u2.set_password("test")
-    u2.save()
-    u3 = User(username="ddghaym@aus.edu")
-    u3.set_password("test")
-    u3.save()
-    u4 = User(username="b00088793@aus.edu")
-    u4.set_password("test")
-    u4.save()
-    Faculty(user=u1, department=13, faculty_type=2).save()
-    Faculty(user=u2, department=13, faculty_type=0).save()
-    Faculty(user=u3, department=13, faculty_type=1).save()
-    Student(user=u4).save()
+    u = User(username="b01@aus.edu")
+    u.set_password("test")
+    u.save()
+    Student.objects.create(user=u)
+    u = User(username="b02@aus.edu")
+    u.set_password("test")
+    u.save()
+    u = User(username="b03@aus.edu")
+    u.set_password("test")
+    u.save()
+    u = User(username="b04@aus.edu")
+    u.set_password("test")
+    u.save()
+
+    u = User(username="aa@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=0, college=3)
+
+    u = User(username="hod@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=2, college=3)
+
+    u = User(username="tf01@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=1, college=3)
+
+    u = User(username="tf02@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=1, college=3)
+
+    u = User(username="advisor@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=3, college=3)
+    
+    u = User(username="adean@aus.edu")
+    u.set_password("test")
+    u.save()
+    Faculty.objects.create(user=u, department=13, faculty_type=4, college=3)
+
+    u = User(username="admin@aus.edu")
+    u.set_password("test")
+    u.save()
+    Admin.objects.create(user=u)
+
 ```
 
 Then call seed() and exit the shell and then do

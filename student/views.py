@@ -1,21 +1,23 @@
-from rest_framework import viewsets
-
 from users.models import *
 from student.seralizers import *
-from users.pagination import CustomPagination
-
-from django.shortcuts import render
-from django.http import HttpResponse
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from users.models import Student
 from django.http import JsonResponse
 
 from .utils import get_user_from_token
 import json
+from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
+from threading import Thread
+from users.views import do_comparison_on_application
+from users.models import COLLEGES
+
+class IsStudentUser(permissions.BasePermission):
+    def has_permission(self, request, view): # type: ignore
+        return Student.objects.filter(user=request.user).exists()
 
 class StartApplicationAPI(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
     def post(self, request):
         # Load the data from the request body
         data = json.loads(request.body)
@@ -25,6 +27,8 @@ class StartApplicationAPI(APIView):
         university = University.objects.filter(university_name=data['university']).first()
         if university is None:
             university = University.objects.create(university_name=data['university'])
+
+        college_dict = dict((y, x) for x, y in COLLEGES)
         
         student = Student.objects.filter(user=user).first()
         if student is None:
@@ -34,16 +38,30 @@ class StartApplicationAPI(APIView):
         student.university = university
         student.phone_num = data['mobileNumber']
         student.expected_graduation =  data['expectedGraduation']
-        student.present_college =  data['presentCollege']
+        student.present_college =  college_dict[data['presentCollege']]
         student.present_major =  data['presentMajor']
         student.current_standing =  data['currentStanding']
         student.host_contact_name =  data['hostContactName']
         student.host_contact_email =  data['hostContactEmail']
+        student.department = data['department']
         student.save()
         
         return JsonResponse({"message": "Student added successfully"}, status=201)
     
+    def delete(self, request):
+        user = get_user_from_token(request)
+        student = Student.objects.filter(user=user).first()
+        if student is None:
+            return JsonResponse({"message": "Student not found"}, status=404)
+        
+        student.delete()
+
+        Student.objects.create(user=user)
+        
+        return JsonResponse({"message": "Student deleted successfully"}, status=204)
+    
 class ApplicationInfoAPI(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
     def get(self, request):
         user = get_user_from_token(request)
         student = Student.objects.filter(user=user).first()
@@ -55,6 +73,7 @@ class ApplicationInfoAPI(APIView):
 
 
 class AddCourseAPI(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
     def post(self, request):
         # Load the data from the request body
         data = json.loads(request.body)
@@ -83,7 +102,13 @@ class AddCourseAPI(APIView):
             syllabus = data['hostUniversitySyllabus'],
             department = department,
         )
+
+        if data.get('ausSyllabus') != None and data.get('ausSyllabus') != '':
+            new_course.aus_syllabus = data['ausSyllabus']
         new_course.save()
+
+        if new_course.syllabus and new_course.aus_syllabus:
+            Thread(target=do_comparison_on_application, args=(new_course,)).start()
         
         return JsonResponse({"message": "Course added successfully"}, status=201)
 
@@ -93,7 +118,31 @@ class AddCourseAPI(APIView):
         courses = CourseApplication.objects.filter(student=student)
         serializer = CourseApplicationSerializer(courses, many=True)
         return JsonResponse(serializer.data, safe=False)
+    
+    def delete(self, request):
+        data = json.loads(request.body)
+        
+        course_application = CourseApplication.objects.filter(course_application_id=int(data['id'])).first()
+        if course_application is None:
+            return JsonResponse({"message": "Course not found"}, status=404)
+        
+        course_application.delete()
+        
+        return JsonResponse({"message": "Course deleted successfully"}, status=204)
 
+
+class SubmitApplication(APIView):
+    permission_classes = [IsAuthenticated, IsStudentUser]
+    def post(self, request):
+        user = get_user_from_token(request)
+        student = Student.objects.filter(user=user).first()
+        if student is None:
+            return JsonResponse({"message": "Student not found"}, status=404)
+        
+        student.submitted_form = True
+        student.save()
+        
+        return JsonResponse({"message": "Application submitted successfully"}, status=201)
 
 course_to_deparment = {
     "ABRD": 0,
@@ -167,4 +216,28 @@ course_to_deparment = {
     "VIS": 2,
     "WRI": 5,
     "WST": 0,
+}
+
+department_to_college = {
+    1: "CAAD",
+    2: "CAAD",
+    3: "CAS",
+    4: "CAS",
+    5: "CAS",
+    6: "CAS",
+    7: "CAS",
+    8: "CAS",
+    9: "CAS",
+    10: "CAS",
+    11: "CEN",
+    12: "CEN",
+    13: "CEN",
+    14: "CEN",
+    15: "CEN",
+    16: "CEN",
+    17: "SBA",
+    18: "SBA",
+    19: "SBA",
+    20: "SBA",
+    21: "SBA",
 }
