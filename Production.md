@@ -84,13 +84,54 @@ Then actually set it up reference: <https://help.zerossl.com/hc/en-us/articles/3
 
 then restart nginx `sudo systemctl restart nginx`
 
+After this works, change the nginx to this to force redirection to https
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+
+    location /.well-known/pki-validation/ {
+        alias /home/ubuntu/static/;
+        try_files $uri =404;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name _;
+
+    ssl_certificate      /home/ubuntu/certificate/certificate.crt;
+    ssl_certificate_key  /home/ubuntu/certificate/private.key;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /.well-known/pki-validation/ {
+        alias /home/ubuntu/static/;
+        try_files $uri =404;
+    }
+}
+```
+
 ## Running the application
 
 Create or go to previous screen
-- Create: `screen -S app`
-- Resume: `screen -r app`
+
+- Create: `screen -S django`
+- Resume: `screen -r django`
 
 Run the following
+
 ``` bash
 source ./exchange_application_venv/bin/activate
 python manage.py runserver 0.0.0.0:8000 --settings=exchange_application.prod
