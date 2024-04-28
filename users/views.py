@@ -10,6 +10,7 @@ from pdf2image import convert_from_path
 from PIL import Image
 import requests
 from openai import OpenAI, OpenAIError
+import anthropic
 import json
 from concurrent.futures import ThreadPoolExecutor
 import time
@@ -74,7 +75,7 @@ def read_pdf(file, pdf_num):
         pdf_pages = convert_from_path(PDF_file, 500)
         
         for page_enumeration, page in enumerate(pdf_pages, start=1):
-            filename = f"{tempdir}\\page_{page_enumeration:03}.jpg"
+            filename = f"{tempdir}\\page_{pdf_num}_{page_enumeration:03}.jpg"
             page.save(filename, "JPEG")
             image_file_list.append(filename)
 
@@ -93,31 +94,26 @@ def pdf_read_with_retry(file, pdf_num):
             print(f"Error reading PDF: {str(e)}")
             time.sleep(2)
     raise Exception(f"Failed to read the PDF file from {file}.")
-    
-def compare(pdf1, pdf2):
-    # read the text content from the PDF files in parallel
-    with ThreadPoolExecutor() as executor:
-        future1 = executor.submit(pdf_read_with_retry, pdf1, 1)
-        future2 = executor.submit(pdf_read_with_retry, pdf2, 2)
 
-        pdf1_text = future1.result()
-        pdf2_text = future2.result()
 
+MAIN_PROMPT = """Act like you are a college professor who needs to compare the learning outcomes of two course\
+syllabi and decide whether or not they are equivalent. To compare their similarity, you have to\
+write bullet points for each of the learning outcomes in course 1 and explain in only 1-2 sentences\
+whether or not they are achieved in course 2. The output must be in JSON format where the key is the\
+course learning objective from course 1 and the value is the explanation. At the end, add a key to the\
+json called "match percentage" and have its value be the percentage of learning outcomes from course 1\
+that matched. Remember the response must be a valid JSON object with no nested objects and must have a match percentage."""
+
+def gpt3(pdf1_text, pdf2_text):
     # compare the two course syllabi using OpenAI's GPT model
     try:
         client = OpenAI() # requires defining the OPENAI_API_KEY environment variable
         response = client.chat.completions.create(
-            #model="gpt-4-turbo-2024-04-09",
-            model="gpt-3.5-turbo-0125",
+            model="gpt-4-turbo-2024-04-09",
+            #model="gpt-3.5-turbo-0125",
             messages=[ 
                 # provide the instructions using system role
-                {"role": "system", "content": 'Act like you are a college professor who needs to compare the learning outcomes of two course\
-                                                syllabi and decide whether or not they are equivalent. To compare their similarity, you have to\
-                                                write bullet points for each of the learning outcomes in course 1 and explain in only 1-2 sentences\
-                                                whether or not they are achieved in course 2. The output must be in JSON format where the key is the\
-                                                course learning objective from course 1 and the value is the explanation. At the end, add a key to the\
-                                                json called "match percentage" and have its value be the percentage of learning outcomes from course 1\
-                                                that matched. Remember the response must be a valid JSON object with no nested objects and must have a match percentage.'},
+                {"role": "system", "content": MAIN_PROMPT},
                 # provide the course syllabi as the user input                                                
                 {"role": "user", "content": f"Course 1: {pdf1_text}"},
                 {"role": "user", "content": f"Course 2: {pdf2_text}"},
@@ -130,11 +126,53 @@ def compare(pdf1, pdf2):
     primary_answer = response.choices[0].message.content
 
     if primary_answer is None:
-        raise Exception("The model did not return a response.")
+        raise Exception("The model did not return a response.")   
+    
+    return primary_answer
+    
+
+def claude3(pdf1_text, pdf2_text):
+    try:
+        client = anthropic.Anthropic()
+
+        message = client.messages.create(
+            model="claude-3-haiku-20240307",
+            #model='claude-3-sonnet-20240229',
+            #model='claude-3-opus-20240229',
+            system=MAIN_PROMPT,
+            max_tokens=1000,
+            messages=[
+                {"role": "user", "content": f"Course 1: {pdf1_text}"},
+                {"role": "assistant", "content": f"Please give me course 2 syllabus."},
+                {"role": "user", "content": f"Course 2: {pdf2_text}"},
+            ]
+        )
+
+        return message.content[0].text
+    except anthropic.AnthropicError as e:
+        raise Exception(f"Anthropic Error: {str(e)}")
+
+
+def compare(pdf1, pdf2):
+    # read the text content from the PDF files in parallel
+    with ThreadPoolExecutor() as executor:
+        future1 = executor.submit(pdf_read_with_retry, pdf1, 1)
+        future2 = executor.submit(pdf_read_with_retry, pdf2, 2)
+
+        pdf1_text = future1.result()
+        pdf2_text = future2.result()
+
+    try:
+        primary_answer = gpt3(pdf1_text, pdf2_text)
+    except Exception as e:
+        primary_answer = claude3(pdf1_text, pdf2_text)
     
     # extract the JSON response from the model's output
     primary_answer = primary_answer[primary_answer.find("{"):primary_answer.rfind("}")+1]
-    primary_answer = json.loads(primary_answer)
+    try:
+        primary_answer = json.loads(primary_answer)
+    except json.JSONDecodeError as e:
+        raise Exception(f"Error decoding the JSON response: {str(e)}")
 
     return primary_answer
 

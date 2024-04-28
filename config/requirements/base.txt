@@ -23,6 +23,7 @@ django-rest-knox
 pytesseract
 pdf2image
 openai
+anthropic
 requests
 coverage
 
