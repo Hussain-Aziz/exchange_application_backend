@@ -53,7 +53,9 @@ class StudentList(viewsets.ReadOnlyModelViewSet):
         if only_new_students:
             students = Student.objects.filter(ixo_details__isnull=True).filter(aus_id__isnull=False)
         elif only_final_approval:
-            students = Student.objects.filter(submitted_form=True)
+            students = Student.objects.filter(submitted_form=True).filter(ixo_details__ixo_approval__isnull=True)
+            # ensure that the student has been approved by the advisor and associate dean
+            students = students.exclude(ixo_details__advisor_approval__isnull=False).filter(ixo_details__associate_dean_approval__isnull=False)
         elif only_in_progress:
             students = Student.objects.filter(ixo_details__isnull=False)
         else:
