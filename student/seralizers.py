@@ -28,7 +28,6 @@ class FacultySerializer(serializers.ModelSerializer):
 
 class CourseApplicationSerializer(serializers.ModelSerializer):
     student = StudentApplicationSerializer()
-    delegated_to = FacultySerializer()
     class Meta:
         model = CourseApplication
         fields = '__all__'
