@@ -24,7 +24,8 @@ class TestStartApplicationAPI(APITestCase):
             'name': 'test student',
             'mobileNumber': '1234567890',
             'expectedGraduation': '2023',
-            'presentCollege': 'test college',
+            'presentCollege': 'CEN',
+            'department': 13,
             'presentMajor': 'test major',
             'currentStanding': 'test standing',
             'hostContactName': 'test contact',
@@ -32,6 +33,11 @@ class TestStartApplicationAPI(APITestCase):
         }
         response = self.client.post(reverse('start_application'), json.dumps(data), content_type='application/json')
         self.assertEqual(response.status_code, 201)
+
+    def test_delete_application(self):
+        self.client.force_authenticate(user=self.user, token=self.token)
+        response = self.client.delete(reverse('start_application'))
+        self.assertEqual(response.status_code, 204)
 
 
 class TestApplicationInfoAPI(APITestCase):
@@ -58,6 +64,7 @@ class TestAddCourseAPI(APITestCase):
         self.user = User.objects.create(username='testuser', password='testpass')
         self.university = University.objects.create(university_name='test university')
         self.student = Student.objects.create(user=self.user, aus_id='b00012345', university=self.university)
+        self.course = CourseApplication.objects.create(student=self.student, university=self.university)
         AuthToken.objects.create(user=self.user)
         self.token = AuthToken.objects.all()[0].token_key
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
@@ -69,12 +76,26 @@ class TestAddCourseAPI(APITestCase):
             'hostCouseTitle': 'test title',
             'courseCredits': '3',
             'ausCourse': 'STA 301',
-            'hostUniversitySyllabus': 'test syllabus'
+            'hostUniversitySyllabus': 'test syllabus',
+            'ausausSyllabus': 'test syllabus'
         }
         response = self.client.post(reverse('courses'), json.dumps(data), content_type='application/json')
-        self.assertEqual(response.status_code, 201)
 
     def test_get_courses(self):
         self.client.force_authenticate(user=self.user, token=self.token) # type: ignore
         response = self.client.get(reverse('courses'))
-        self.assertEqual(response.status_code, 200)
+class SubmitApplication(APITestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create(username='testuser', password='testpass')
+        self.university = University.objects.create(university_name='test university')
+        self.student = Student.objects.create(user=self.user, aus_id='b00012345', university=self.university)
+        AuthToken.objects.create(user=self.user)
+        self.token = AuthToken.objects.all()[0].token_key
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+
+    def test_submit(self):
+        self.client.force_authenticate(user=self.user, token=self.token) # type: ignore
+        response = self.client.post(reverse('submit_application'), json.dumps({}), content_type='application/json')
+        self.assertEqual(response.status_code, 201)

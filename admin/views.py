@@ -112,18 +112,6 @@ class CoursesList(APIView):
         course.save()
         return JsonResponse({'message': 'Course updated successfully'}, safe=False)
     
-class ForceApproval(APIView):
-    permission_classes = [IsAdminUser, IsAuthenticated]
-    def post(self, request):
-        data = json.loads(request.body)
-        course_application = CourseApplication.objects.filter(course_application_id=int(data['id'])).first()
-        if course_application is None:
-            return JsonResponse({"message": "Course not found"}, status=404)
-        
-        course_application.force_approval_to = data['email']
-        course_application.save()
-        return JsonResponse({"message": "Approval forced successfully"}, status=201)
-    
 
 def student_search(request, students):
     search_text = request.query_params.get('search_text', None) # type: ignore
