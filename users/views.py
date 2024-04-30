@@ -12,7 +12,6 @@ import requests
 from openai import OpenAI, OpenAIError
 import anthropic
 import json
-from concurrent.futures import ThreadPoolExecutor
 import time
 from users.models import CourseApplication
 
@@ -154,13 +153,8 @@ def claude3(pdf1_text, pdf2_text):
 
 
 def compare(pdf1, pdf2):
-    # read the text content from the PDF files in parallel
-    with ThreadPoolExecutor() as executor:
-        future1 = executor.submit(pdf_read_with_retry, pdf1, 1)
-        future2 = executor.submit(pdf_read_with_retry, pdf2, 2)
-
-        pdf1_text = future1.result()
-        pdf2_text = future2.result()
+    pdf1_text = pdf_read_with_retry(pdf1, 1)
+    pdf2_text = pdf_read_with_retry(pdf2, 2)
 
     try:
         primary_answer = gpt3(pdf1_text, pdf2_text)
@@ -194,6 +188,8 @@ def disallow_multiple_comparisons(course_application):
         return (False, "Comparison is still running. Please try again later.")
 
 def do_comparison_on_application(course_application):
+    if course_application.aus_syllabus is None or course_application.syllabus is None:
+        return (False, "Both syllabi are required for comparison.")
     if course_application.running_comparison:
         return disallow_multiple_comparisons(course_application)
     

@@ -3,7 +3,6 @@ from users.models import Faculty, IXODetails, User, Student, University
 from users.models import CourseApplication
 from django.urls import reverse
 from knox.auth import AuthToken
-from threading import Thread
 from student.seralizers import FacultySerializer, UserSerializer, StudentApplicationSerializer, IXODetailsSerializer, UniversitySerializer, CourseApplicationSerializer
 import time
 from django.test import TestCase
@@ -72,15 +71,3 @@ class TestApplicationComparison(APITestCase):
     def test_comparison_bad_params(self):
         self.client.force_authenticate(user=self.user, token=self.token) # type: ignore
         response = self.client.get(reverse('compare_application'), {'id': 123})
-
-    def test_muli_threaded_comparison(self):
-        thread1 = Thread(target=self.test_comparison)
-        thread2 = Thread(target=self.test_comparison)
-        
-        thread1.start()
-        time.sleep(5)
-        thread2.start()
-
-        for thread in [thread1, thread2]:
-            thread.join()
-

@@ -41,7 +41,7 @@ class UploadSyllabus(APITestCase):
     def test_upload_syllabus(self):
         self.client.force_authenticate(user=self.faculty_user, token=self.token) # type: ignore
         response = self.client.post(reverse('upload_syllabus'), json.dumps({'id': '999', 'syllabus': 'https://link.test'}), content_type='application/json')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
         self.course_application.refresh_from_db()
         self.assertEqual(self.course_application.aus_syllabus, 'https://link.test')
 
@@ -62,7 +62,7 @@ class ApproveCourse(APITestCase):
     def test_approve_course(self):
         self.client.force_authenticate(user=self.faculty_user, token=self.token) # type: ignore
         response = self.client.post(reverse('approve_course'), json.dumps({'id': 999,'programArea': 'test program', 'gradeRequirement': 'C', 'preReqsMet': True, 'approved': True,'comments': 'test comments','delegate': 'delegate@test.edu',}), content_type='application/json')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
         self.course_application.refresh_from_db()
         self.assertEqual(self.course_application.program_area, 'test program')
         self.assertEqual(self.course_application.grade_required, 'C')

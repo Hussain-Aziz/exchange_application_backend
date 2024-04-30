@@ -32,7 +32,7 @@ class TestStartApplicationAPI(APITestCase):
             'hostContactEmail': 'test@test.com'
         }
         response = self.client.post(reverse('start_application'), json.dumps(data), content_type='application/json')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
 
     def test_delete_application(self):
         self.client.force_authenticate(user=self.user, token=self.token)
@@ -98,4 +98,4 @@ class SubmitApplication(APITestCase):
     def test_submit(self):
         self.client.force_authenticate(user=self.user, token=self.token) # type: ignore
         response = self.client.post(reverse('submit_application'), json.dumps({}), content_type='application/json')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)

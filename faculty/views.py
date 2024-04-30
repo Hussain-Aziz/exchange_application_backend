@@ -12,9 +12,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 
 from student.utils import get_user_from_token
-from users.views import do_comparison_on_application
 import json
-from threading import Thread
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
 
@@ -46,11 +44,8 @@ class UploadSyllabus(APIView):
         
         course_application.aus_syllabus = data['syllabus']
         course_application.save()
-
-        # fire and forget
-        Thread(target=do_comparison_on_application, args=(course_application,)).start()
         
-        return JsonResponse({"message": "Syllabus uploaded successfully"}, status=201)
+        return JsonResponse({"message": "Syllabus uploaded successfully", 'id': course_application.course_application_id}, status=200)
     
     
 class ApproveCourse(APIView):
@@ -94,7 +89,7 @@ class ApproveCourse(APIView):
                     course_application.save()
         
         
-        return JsonResponse({"message": "Syllabus uploaded successfully"}, status=201)
+        return JsonResponse({"message": "Syllabus uploaded successfully"}, status=200)
         
 class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsFacultyUser, IsAuthenticated]
@@ -175,7 +170,7 @@ class ApproveStudent(APIView):
         
         student.ixo_details.save()
         
-        return JsonResponse({"message": "Student approved successfully"}, status=201)
+        return JsonResponse({"message": "Student approved successfully"}, status=200)
     
 
 def get_faculty(request):

@@ -8,8 +8,6 @@ from .utils import get_user_from_token
 import json
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
-from threading import Thread
-from users.views import do_comparison_on_application
 from users.models import COLLEGES
 
 class IsStudentUser(permissions.BasePermission):
@@ -46,7 +44,7 @@ class StartApplicationAPI(APIView):
         student.department = data['department']
         student.save()
         
-        return JsonResponse({"message": "Student added successfully"}, status=201)
+        return JsonResponse({"message": "Student added successfully"}, status=200)
     
     def delete(self, request):
         user = get_user_from_token(request)
@@ -108,11 +106,8 @@ class AddCourseAPI(APIView):
         if data.get('ausSyllabus') != None and data.get('ausSyllabus') != '':
             new_course.aus_syllabus = data['ausSyllabus']
         new_course.save()
-
-        if new_course.syllabus and new_course.aus_syllabus:
-            Thread(target=do_comparison_on_application, args=(new_course,)).start()
         
-        return JsonResponse({"message": "Course added successfully"}, status=201)
+        return JsonResponse({"message": "Course added successfully", "id": new_course.course_application_id}, status=200)
 
     def get(self, request):
         user = get_user_from_token(request)
@@ -144,7 +139,7 @@ class SubmitApplication(APIView):
         student.submitted_form = True
         student.save()
         
-        return JsonResponse({"message": "Application submitted successfully"}, status=201)
+        return JsonResponse({"message": "Application submitted successfully"}, status=200)
 
 course_to_deparment = {
     "ABRD": 0,
