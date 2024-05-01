@@ -96,6 +96,7 @@ class Student(models.Model):
     host_contact_email = models.EmailField(max_length=250, null=True, blank=True)
     ixo_details = models.ForeignKey(IXODetails, on_delete=models.CASCADE, null=True, blank=True)
     submitted_form = models.BooleanField(default=False)
+    form_comments = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['aus_id']

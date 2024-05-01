@@ -155,6 +155,19 @@ class ApproveStudent(APIView):
         if student.ixo_details is None:
             return JsonResponse({"message": "Student application not submitted"}, status=400)
         
+        if (str2bool(data['approved']) == False):
+            # force reject all
+            student.ixo_details.advisor_approval = None
+            student.ixo_details.associate_dean_approval = None
+            student.ixo_details.scholarship_approval = None
+            student.ixo_details.sponsorship_approval = None
+            student.submitted_form = False
+            student.form_comments = data['comments']
+            student.ixo_details.save()
+            student.save()
+            return JsonResponse({"message": "Student rejected successfully"}, status=200)
+
+        
         if faculty.faculty_type == 3:
             student.ixo_details.advisor_approval = str2bool(data['approved'])
             student.ixo_details.advisor_approval_date = datetime.datetime.now()

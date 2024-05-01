@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from users.models import Student
 from django.http import JsonResponse
 
-from .utils import get_user_from_token
+from .utils import get_user_from_token, str2bool
 import json
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
@@ -133,10 +133,16 @@ class SubmitApplication(APIView):
     def post(self, request):
         user = get_user_from_token(request)
         student = Student.objects.filter(user=user).first()
-        if student is None:
+        if student is None or student.ixo_details is None:
             return JsonResponse({"message": "Student not found"}, status=404)
         
         student.submitted_form = True
+        if request.data.get('scholarship') is not None:
+            student.ixo_details.scholarship_approval = False
+        if request.data.get('sponsorship') is not None:
+            student.ixo_details.sponsorship_approval = False
+
+        student.ixo_details.save()
         student.save()
         
         return JsonResponse({"message": "Application submitted successfully"}, status=200)
