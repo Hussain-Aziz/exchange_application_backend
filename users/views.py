@@ -48,6 +48,9 @@ class ComparisonOnApplication(APIView):
         if success:
             return JsonResponse(result, safe=False)
         else:
+            course.refresh_from_db()
+            if course.ignore_aus_syllabus:
+                return JsonResponse({"info": f"Can't do comparison" }, status=200)
             return JsonResponse({"error": f"An error occurred while processing the request: {result}" }, status=500)
 
 def read_pdf(file, pdf_num):

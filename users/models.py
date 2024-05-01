@@ -124,6 +124,7 @@ class CourseApplication(models.Model):
     delegated_approval = models.BooleanField(null=True, blank=True)
     force_approval_to = models.EmailField(null=True, blank=True)
     approved_by = models.EmailField(null=True, blank=True)
+    ignore_aus_syllabus = models.BooleanField(default=False)
     
     class Meta:
         ordering = ['course_application_id']

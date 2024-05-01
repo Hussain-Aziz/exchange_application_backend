@@ -26,8 +26,9 @@ class AvailableSyllabus(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsFacultyUser, IsAuthenticated]
     def get_queryset(self): # type: ignore
         faculty = get_faculty(self.request)
-
-        courses = CourseApplication.objects.filter(department=faculty.department).filter(aus_syllabus__isnull=True) # if aus syllabus is null then it needs to be uploaded
+        
+        # if aus syllabus is null then it needs to be uploaded
+        courses = CourseApplication.objects.filter(Q(department=faculty.department) & Q(aus_syllabus__isnull=True) & Q(ignore_aus_syllabus=False))
         courses = course_search(self.request, courses)
         courses = get_course_by_id(self.request, courses)
 
@@ -42,10 +43,14 @@ class UploadSyllabus(APIView):
         if course_application is None:
             return JsonResponse({"message": "Course not found"}, status=404)
         
-        course_application.aus_syllabus = data['syllabus']
-        course_application.save()
-        
-        return JsonResponse({"message": "Syllabus uploaded successfully", 'id': course_application.course_application_id}, status=200)
+        if data.get('ignore_aus_syllabus') != None and data.get('ignore_aus_syllabus') != '':
+            course_application.ignore_aus_syllabus = str2bool(data['ignore_aus_syllabus'])
+            course_application.save()
+            return JsonResponse({"message": "Syllabus ignored successfully"}, status=200)
+        else:
+            course_application.aus_syllabus = data['syllabus']
+            course_application.save()
+            return JsonResponse({"message": "Syllabus uploaded successfully", 'id': course_application.course_application_id}, status=200)
     
     
 class ApproveCourse(APIView):
@@ -100,7 +105,7 @@ class AvailableApprovals(viewsets.ReadOnlyModelViewSet):
         
         courses = CourseApplication.objects.all()
 
-        courses = courses.filter(aus_syllabus__isnull=False) # remove courses that dont have syllabus yet
+        courses = courses.filter(Q(aus_syllabus__isnull=False) | Q(ignore_aus_syllabus=True)) # remove courses that dont have syllabus yet
         courses = courses.filter(approved_status__isnull=True) # remove courses that are already approved
 
         if faculty.faculty_type == 1 or faculty.faculty_type == 3 or faculty.faculty_type == 4: # tf, advisor, associate dean
