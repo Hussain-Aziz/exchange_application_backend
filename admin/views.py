@@ -55,7 +55,7 @@ class StudentList(viewsets.ReadOnlyModelViewSet):
         elif only_final_approval:
             students = Student.objects.filter(submitted_form=True).filter(ixo_details__ixo_approval__isnull=True)
             # ensure that the student has been approved by the advisor and associate dean
-            students = students.exclude(ixo_details__advisor_approval__isnull=False).filter(ixo_details__associate_dean_approval__isnull=False)
+            students = students.filter(ixo_details__advisor_approval=True).filter(ixo_details__associate_dean_approval=True)
         elif only_in_progress:
             students = Student.objects.filter(ixo_details__isnull=False)
         else:
@@ -89,6 +89,17 @@ class FinalApproval(APIView):
         student = Student.objects.get(id=data['id'])
         if student.ixo_details is None:
             return JsonResponse({'message': 'Initial approval not found'}, safe=False)
+        
+        if not str2bool(data['finalApproval']):
+            student.submitted_form = False
+            student.ixo_details.ixo_approval = None
+            student.ixo_details.advisor_approval = None
+            student.ixo_details.associate_dean_approval = None
+            student.ixo_details.scholarship_approval = None
+            student.ixo_details.sponsorship_approval = None
+            student.ixo_details.save()
+            student.save()
+            return JsonResponse({'message': 'Final approval saved successfully'}, safe=False)
         student.ixo_details.student_type = data['studentType'] 
         student.ixo_details.ixo_approval = str2bool(data['finalApproval'])
         student.ixo_details.ixo_approval_date = datetime.datetime.now()
