@@ -1,5 +1,7 @@
 # Steps to deploy the project on a production server
 
+This assumes an ubuntu server is being used.
+
 ## Prerequisites
 
 1. Download python 3.11.7 from <https://www.python.org/ftp/python/3.11.7/python-3.11.7-amd64.exe>
@@ -29,6 +31,28 @@ source ./exchange_application_venv/bin/activate
 
 # install dependencies
 pip install -r config/requirements/base.txt
+```
+
+### Environment variables
+
+The app requires the following environment variables to be set (in an .env file in the root dir)
+
+```bash
+OPENAI_API_KEY
+ANTHROPIC_API_KEY
+SECRET_KEY
+DB_NAME
+DB_USERNAME
+DB_PASSWORD
+DB_HOST
+DB_PORT
+```
+
+where secret key is the django secret key which can be generated in django shell by running
+
+```python
+from django.core.management.utils import get_random_secret_key
+print(get_random_secret_key())
 ```
 
 ### NGINX
