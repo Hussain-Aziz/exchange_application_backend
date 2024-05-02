@@ -26,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
 class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
-    throttle_classes = [AnonRateThrottle]
+    #throttle_classes = [AnonRateThrottle]
 
     def post(self, request, format=None):
         serializer = AuthTokenSerializer(data=request.data)
