@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import permissions, serializers
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.throttling import AnonRateThrottle
 from knox.views import LoginView as KnoxLoginView
 
 from users.models import Student, Faculty, Admin
@@ -25,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
 class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
+    throttle_classes = [AnonRateThrottle]
 
     def post(self, request, format=None):
         serializer = AuthTokenSerializer(data=request.data)
