@@ -52,11 +52,27 @@ class StartApplicationAPI(APIView):
         if student is None:
             return JsonResponse({"message": "Student not found"}, status=404)
         
-        # delete the student
-        student.delete()
+        # delete student courses
+        courses = CourseApplication.objects.filter(student=student)
+        for course in courses:
+            course.delete()
 
-        # create a new student with new id (which effectively removes their course applications)
-        Student.objects.create(user=user)
+        student.aus_id = None
+        student.name = None
+        student.university = None
+        student.phone_num = None
+        student.expected_graduation = None
+        student.present_college = None
+        student.present_major = None
+        student.department = None
+        student.current_standing = None
+        student.host_contact_name = None
+        student.host_contact_email = None
+        student.ixo_details = None
+        student.submitted_form = False
+        student.form_comments = None
+
+        student.save()
         
         return JsonResponse({"message": "Student deleted successfully"}, status=204)
     
