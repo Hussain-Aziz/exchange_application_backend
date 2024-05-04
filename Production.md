@@ -4,12 +4,9 @@ This assumes an ubuntu server is being used.
 
 ## Prerequisites
 
-1. Download python 3.11.7 from <https://www.python.org/ftp/python/3.11.7/python-3.11.7-amd64.exe>
-2. Download tesseract for the comparison of pdfs
-    - windows: download from [here](https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-setup-3.05.00dev-205-ge205c59.exe) and set it up.
-    - linux: run `sudo apt-get install -y tesseract-ocr && sudo apt-get install -y poppler-utils`
-3. Download postgres thing `sudo apt-get install libpq-dev`
-4. Download nginx `sudo apt-get install nginx`
+1. Download tesseract for the comparison of pdfs by run `sudo apt-get install -y tesseract-ocr && sudo apt-get install -y poppler-utils`
+2. Download postgres thing `sudo apt-get install libpq-dev`
+3. Download nginx `sudo apt-get install nginx`
 
 ## Initial setup
 
@@ -57,7 +54,7 @@ print(get_random_secret_key())
 
 ### NGINX
 
-add this to /etc/nginx/sites-available/django
+create the directory /etc/nginx/sites-enabled and add this to /etc/nginx/sites-enabled/exchange
 
 ``` nginx
 server {
@@ -65,7 +62,7 @@ server {
     server_name _;
 
     location / {
-        proxy_pass http://0.0.0.0:8000;
+        proxy_pass http://localhost:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -74,8 +71,7 @@ server {
 }
 ```
 
-and then cd into /etc/nginx/sites-enabled and run `sudo ln -s ../sites-available/django django`
-and remove the default file `sudo rm default`
+then edit the nginx.conf file and remove the line `include /etc/nginx/conf.d/*.conf;` and add `include /etc/nginx/sites-enabled/*;`
 then restart nginx `sudo systemctl restart nginx`
 
 ### SSL Certificates
