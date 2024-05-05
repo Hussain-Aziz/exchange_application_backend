@@ -16,11 +16,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from knox import views as knox_views
-from .views import LoginView
+from exchange_application.views import LoginView, RegistrationAPI, ActivateAccountAPI
 from django.conf import settings # new
 from  django.conf.urls.static import static #new
+from . import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('register/', RegistrationAPI.as_view()),
+    path('activate/<str:activation_key>/', ActivateAccountAPI.as_view(), name='activate'),
     path('login/', LoginView.as_view(), name='knox_login'),
     path('logout/', knox_views.LogoutView.as_view(), name='knox_logout'),
     path('logoutall/', knox_views.LogoutAllView.as_view(), name='knox_logoutall'),
@@ -29,6 +33,7 @@ urlpatterns = [
     path('faculty/', include('faculty.urls')),
     path('ixo/', include('admin.urls')),
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root = settings.STATIC_URL)

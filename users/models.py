@@ -44,6 +44,10 @@ COLLEGES = (
     (4, "SBA"),
 )
 
+class AccountActivation(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    activation_key = models.CharField(max_length=64)
+
 class Faculty(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.PositiveIntegerField(choices=DEPARTMENTS, default=0)

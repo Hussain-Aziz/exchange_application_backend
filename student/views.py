@@ -1,8 +1,10 @@
+from exchange_application.settings import EMAIL_HOST_USER
 from users.models import *
 from student.seralizers import *
 from rest_framework.views import APIView
 from users.models import Student
 from django.http import JsonResponse
+from django.core.mail import send_mail
 
 from .utils import get_user_from_token, str2bool
 import json
@@ -122,6 +124,14 @@ class AddCourseAPI(APIView):
         if data.get('ausSyllabus') != None and data.get('ausSyllabus') != '':
             new_course.aus_syllabus = data['ausSyllabus']
         new_course.save()
+
+        hod = Faculty.objects.filter(department=department).filter(faculty_type=0).first()
+        aa = Faculty.objects.filter(department=department).filter(faculty_type=0).first()
+        if hod is not None and aa is not None:
+            send_mail("Course Approval", 
+                      f"New course approval request has been made. Please approve it at https://ausxchange.com/faculty/course_requests/{new_course.course_application_id}", 
+                      EMAIL_HOST_USER, 
+                      [hod.user.username, aa.user.username])
         
         return JsonResponse({"message": "Course added successfully", "id": new_course.course_application_id}, status=200)
 
@@ -160,6 +170,16 @@ class SubmitApplication(APIView):
 
         student.ixo_details.save()
         student.save()
+
+        adean = Faculty.objects.filter(department=student.department).filter(faculty_type=4).first()
+        advisor = Faculty.objects.filter(department=student.department).filter(faculty_type=3).first()
+
+        if adean is not None and advisor is not None:
+            send_mail("Application Submission", 
+                      f"New application has been submitted. Please approve it at https://ausxchange.com/faculty/approve_application/{student.id}", 
+                      EMAIL_HOST_USER, 
+                      [adean.user.username, advisor.user.username])
+
         
         return JsonResponse({"message": "Application submitted successfully"}, status=200)
 

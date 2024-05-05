@@ -2,6 +2,8 @@ import datetime
 from rest_framework import viewsets
 
 from admin.views import filter_student_by_id, get_student_by_id, student_search
+from django.core.mail import send_mail
+from exchange_application.settings import EMAIL_HOST_USER
 from users.models import *
 from student.utils import *
 from student.seralizers import *
@@ -81,6 +83,7 @@ class ApproveCourse(APIView):
         course_application.save()
 
         if course_application.approved_status:
+            send_mail("Course Approved", f"Your course {course_application.course_code} has been approved by {faculty.user.username}", EMAIL_HOST_USER, [course_application.student.user.username])
             if course_application.force_approval_to is not None:
                 course_application.approved_by = course_application.force_approval_to
                 course_application.save()

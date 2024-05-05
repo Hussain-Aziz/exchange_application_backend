@@ -14,6 +14,7 @@ from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from django.core.management.utils import get_random_secret_key;
 
 load_dotenv() 
 
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'knox',
     'rest_framework.authtoken',
     'whitenoise.runserver_nostatic',
+    
 ]
 
 REST_FRAMEWORK = {
@@ -98,6 +100,19 @@ TEMPLATES = [
         },
     },
 ]
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_FROM = 'ausexchangeprogramportal@gmail.com'
+EMAIL_HOST_USER = 'ausexchangeprogramportal@gmail.com'
+EMAIL_HOST_PASSWORD = 'qyidsbeibisoyakf'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_DEBUG = True
+
+PASSWORD_RESET_TIMEOUT = 14400
+
 
 WSGI_APPLICATION = 'exchange_application.wsgi.application'
 
