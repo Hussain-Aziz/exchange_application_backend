@@ -161,15 +161,24 @@ def compare(pdf1, pdf2):
 
     try:
         primary_answer = gpt3(pdf1_text, pdf2_text)
+        primary_answer = primary_answer[primary_answer.find("{"):primary_answer.rfind("}")+1]
+        try:
+            primary_answer = json.loads(primary_answer)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Error decoding the JSON response: {str(e)}")
+        # check if it has a 'match percentage' key
+        if "match percentage" not in primary_answer:
+            raise Exception("The response does not contain a 'match percentage' key.")
     except Exception as e:
         primary_answer = claude3(pdf1_text, pdf2_text)
-    
-    # extract the JSON response from the model's output
-    primary_answer = primary_answer[primary_answer.find("{"):primary_answer.rfind("}")+1]
-    try:
-        primary_answer = json.loads(primary_answer)
-    except json.JSONDecodeError as e:
-        raise Exception(f"Error decoding the JSON response: {str(e)}")
+        primary_answer = primary_answer[primary_answer.find("{"):primary_answer.rfind("}")+1]
+        try:
+            primary_answer = json.loads(primary_answer)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Error decoding the JSON response: {str(e)}")
+        # check if it has a 'match percentage' key
+        if "match percentage" not in primary_answer:
+            raise Exception("The response does not contain a 'match percentage' key.")
 
     return primary_answer
 
