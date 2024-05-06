@@ -107,7 +107,10 @@ class AddCourseAPI(APIView):
         aus_course = data['ausCourse']
         course_subject = aus_course.split(" ")[0]
 
-        department = course_to_deparment[course_subject]
+        try:
+            department = course_to_deparment[course_subject]
+        except:
+            department = 0
     
         # Create a new Course instance
         new_course = CourseApplication(
@@ -125,7 +128,7 @@ class AddCourseAPI(APIView):
             new_course.aus_syllabus = data['ausSyllabus']
         new_course.save()
 
-        hod = Faculty.objects.filter(department=department).filter(faculty_type=0).first()
+        hod = Faculty.objects.filter(department=department).filter(faculty_type=2).first()
         aa = Faculty.objects.filter(department=department).filter(faculty_type=0).first()
         if hod is not None and aa is not None:
             send_mail("Course Approval", 

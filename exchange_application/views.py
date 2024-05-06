@@ -66,9 +66,11 @@ class RegistrationAPI(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        print(request.data)
         
         if str2bool(request.data['is_faculty']):
-            Faculty.objects.create(user=user, faculty_type=request.data['faculty_type'], department=request.data['department'])
+            Faculty.objects.create(user=user, faculty_type=int(request.data['faculty_role']), department=int(request.data['faculty_department']))
         else:
             Student.objects.create(user=user)
         
@@ -80,7 +82,7 @@ class RegistrationAPI(generics.GenericAPIView):
 class LoginView(KnoxLoginView):
     permission_classes = (permissions.AllowAny,)
     serializer_class = UserSerializer
-    throttle_classes = [AnonRateThrottle]
+    #throttle_classes = [AnonRateThrottle]
 
     def post(self, request, format=None):
         serializer = AuthTokenSerializer(data=request.data)
@@ -90,21 +92,17 @@ class LoginView(KnoxLoginView):
             return Response({"error": "Your account is not activated yet."}, status=400)
         login(request, user)
 
-        extra_data = {}
         if Student.objects.filter(user=user).exists():
-            extra_data["is_faculty"] = False
+            extra_data = {"is_faculty": False}
         elif Faculty.objects.filter(user=user).exists():
-            extra_data["is_faculty"] = True
-            extra_data["faculty_type"] = Faculty.objects.get(user=user).faculty_type
+            extra_data = {"is_faculty": True,
+                          "faculty_type": Faculty.objects.get(user=user).faculty_type}
         elif Admin.objects.filter(user=user).exists():
-            extra_data["is_admin"] = True
+            extra_data = {"is_admin": True}
+        
 
         response = super(LoginView, self).post(request, format=None)
-        if 'user' in response.data: # type: ignore
-            user_data = response.data['user'] # type: ignore
-            if isinstance(user_data, dict):  # Ensure it's a dictionary
-                user_data.update(extra_data)
-
+        response.data['user'].update(extra_data) # type: ignore
         return response
 
 # class LoginView(KnoxLoginView):

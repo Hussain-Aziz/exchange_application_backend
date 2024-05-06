@@ -173,6 +173,7 @@ class ApproveStudent(APIView):
             student.form_comments = data['comments']
             student.ixo_details.save()
             student.save()
+            send_mail("Application Rejected", f"Your application has been rejected because {student.form_comments}", EMAIL_HOST_USER, [student.user.username])
             return JsonResponse({"message": "Student rejected successfully"}, status=200)
 
         

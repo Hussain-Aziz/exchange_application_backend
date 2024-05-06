@@ -61,7 +61,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/hour',
+        'anon': '1000/hour',
     }
 }
 
