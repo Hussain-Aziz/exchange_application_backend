@@ -26,8 +26,9 @@ class Comparison(APIView):
                 return JsonResponse({"error": "Please provide the path or URL of the two course syllabi."}, status=400)
             
             # compare the two course syllabi
-            comparison_result = compare(pdf1, pdf2)
-            return JsonResponse(comparison_result, safe=False)
+            #comparison_result = compare(pdf1, pdf2)
+            #return JsonResponse(comparison_result, safe=False)
+            return JsonResponse({"error": "This endpoint is deprecated. Please use /comparison-on-application/ endpoint."}, status=400)
         
         except Exception as e:
             return JsonResponse({"error": f"An error occurred while processing the request: {e}" }, status=500)
@@ -97,7 +98,6 @@ def pdf_read_with_retry(file, pdf_num):
             time.sleep(2)
     raise Exception(f"Failed to read the PDF file from {file}.")
 
-
 MAIN_PROMPT = """Act like you are a college professor who needs to compare the learning outcomes of two course\
 syllabi and decide whether or not they are equivalent. To compare their similarity, you have to\
 write bullet points for each of the learning outcomes in course 1 and explain in only 1-2 sentences\
@@ -132,7 +132,6 @@ def gpt3(pdf1_text, pdf2_text):
     
     return primary_answer
     
-
 def claude3(pdf1_text, pdf2_text):
     try:
         client = anthropic.Anthropic()
@@ -153,7 +152,6 @@ def claude3(pdf1_text, pdf2_text):
         return message.content[0].text
     except anthropic.AnthropicError as e:
         raise Exception(f"Anthropic Error: {str(e)}")
-
 
 def compare(pdf1, pdf2):
     pdf1_text = pdf_read_with_retry(pdf1, 1)
@@ -200,6 +198,7 @@ def disallow_multiple_comparisons(course_application):
         return (False, "Comparison is still running. Please try again later.")
 
 def do_comparison_on_application(course_application):
+    return DSA_COMPARISON
     if course_application.aus_syllabus is None or course_application.syllabus is None:
         return (False, "Both syllabi are required for comparison.")
     if course_application.running_comparison:
@@ -223,3 +222,14 @@ def do_comparison_on_application(course_application):
         course_application.running_comparison = False
         course_application.save()
         return (False, str(e))
+    
+
+DSA_COMPARISON = """{
+  "Derive the time complexity of basic programs and algorithms to evaluate their performance when handling large amounts of data.": "Achieved in course 2. Learning outcome 1 in course 2 covers analyzing time complexity using big-O notation.",
+  "Implement Abstract Data Types (ADTs) such as vectors, lists, stacks, queues, trees, heaps, priority queues, hash tables, and graphs.": "Partially achieved in course 2. Learning outcome 3 in course 2 covers basic data structures, but does not explicitly mention priority queues or graphs.",
+  "Develop programs that make use of one or more ADTs, using the C++ object-oriented programming language and the C++ Standard Library.": "Not achieved in course 2. There is no mention of using C++ or the C++ Standard Library specifically.",
+  "Understand the use of recursion to process data structures and implement algorithms.": "Achieved in course 2. Learning outcome 2 in course 2 covers applying recursive programming in problem solving.",
+  "Apply searching and sorting algorithms to solve computing problems effectively.": "Achieved in course 2. Learning outcomes 4 and 5 in course 2 cover selecting appropriate searching, hashing, and sorting algorithms."
+  "match percentage": 80%
+}
+"""
