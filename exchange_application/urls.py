@@ -33,6 +33,7 @@ urlpatterns = [
     path('student/', include('student.urls')),
     path('faculty/', include('faculty.urls')),
     path('ixo/', include('admin.urls')),
+    path('clear/', views.ClearDatabase.as_view(), name='clear'),
 ]
 
 if settings.DEBUG:

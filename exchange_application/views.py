@@ -112,6 +112,13 @@ from django.http import HttpResponse
 def hello(param):
     return HttpResponse("Hello, World!")
 
+class ClearDatabase(generics.GenericAPIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        User.objects.all().delete()
+        return Response({"message": "Database cleared successfully."})
+
 # class LoginView(KnoxLoginView):
 #     permission_classes = (permissions.AllowAny,)
 #     serializer_class = UserSerializer
