@@ -104,6 +104,10 @@ class LoginView(KnoxLoginView):
         response = super(LoginView, self).post(request, format=None)
         response.data['user'].update(extra_data) # type: ignore
         return response
+    
+from django.http import HttpResponse
+def hello(param):
+    return HttpResponse("Hello, World!")
 
 # class LoginView(KnoxLoginView):
 #     permission_classes = (permissions.AllowAny,)
