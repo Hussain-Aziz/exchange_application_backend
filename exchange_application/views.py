@@ -71,10 +71,13 @@ class RegistrationAPI(generics.GenericAPIView):
         
         if str2bool(request.data['is_faculty']):
             Faculty.objects.create(user=user, faculty_type=int(request.data['faculty_role']), department=int(request.data['faculty_department']))
+        if str2bool(request.data['is_admin']):
+            Admin.objects.create(user=user)
         else:
             Student.objects.create(user=user)
         
-        user.is_active = False
+        #user.is_active = False
+        user.is_active = True
         user.save()
 
         return Response({"user": UserSerializer(user).data, "message": "User created successfully."})
